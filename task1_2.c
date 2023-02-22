@@ -4,8 +4,8 @@
 #include "lodepng.h"
 #include <CL/cl.h>
 
-#define W (10000)
-#define H (10000)
+#define W (100)
+#define H (100)
 
 const char *programSource = "                                   \n" \
 "__kernel void addMatrix(                                       \n" \
@@ -14,8 +14,8 @@ const char *programSource = "                                   \n" \
 "   __global unsigned * C)                                      \n" \
 "   {                                                           \n" \
 "    int w, h;                                             \n" \
-"    w = 10000;                                                   \n" \
-"    h = 10000;                                                   \n" \
+"    w = 100;                                                   \n" \
+"    h = 100;                                                   \n" \
 "    for (int i=0; i<h; i++) {                                  \n" \
 "        for (int j=0; j<w; j++) {                              \n" \
 "            C[ w * i + j ] = A[ w * i + j ] + B[ w * i + j ];\n" \
@@ -87,7 +87,10 @@ void add_matrix(unsigned * a, unsigned * b, unsigned * c) {
     size_t global;                      // global domain size for our calculation
     size_t local;                       // local domain size for our calculation
 
-    cl_platform_id platform_id;
+    cl_uint num_platforms;
+    cl_uint num_devices;
+
+    cl_platform_id *platform_id;
     cl_device_id device_id;             // compute device id 
     cl_context context;                 // compute context
     cl_command_queue commands;          // compute command queue
@@ -97,17 +100,24 @@ void add_matrix(unsigned * a, unsigned * b, unsigned * c) {
     cl_mem A, B;                        // device memory used for the input array
     cl_mem C;                           // device memory used for the output array
 
-    err = clGetPlatformIDs(1, &platform_id, NULL);
+    err = clGetPlatformIDs(0, NULL, &num_platforms);
+    if (err != CL_SUCCESS) {
+        printf("Error: Failed to get platform id!\n");
+    }
+    platform_id = (cl_platform_id *) malloc(sizeof(cl_platform_id) * num_platforms);
+
+    err = clGetPlatformIDs(num_platforms, platform_id, NULL);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to get platform id!\n");
     }
 
-    err = clGetDeviceIDs(platform_id, gpu ? CL_DEVICE_TYPE_GPU : CL_DEVICE_TYPE_CPU, 1, &device_id, NULL);
+
+    err = clGetDeviceIDs(platform_id[0], gpu ? CL_DEVICE_TYPE_GPU : CL_DEVICE_TYPE_CPU, 1, &device_id, &num_devices);
         if (err != CL_SUCCESS) {
         printf("Error: Failed to create a device group!\n");
     }
 
-    context = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
+    context = clCreateContext(0, num_devices, &device_id, NULL, NULL, &err);
     if (!context) {
         printf("Error: Failed to create a compute context!\n");
     }
@@ -195,5 +205,34 @@ void add_matrix(unsigned * a, unsigned * b, unsigned * c) {
     clReleaseKernel(kernel);
     clReleaseCommandQueue(commands);
     clReleaseContext(context);
+
+    // Get system info
+    size_t max_size = 100;
+    char * platform_name = (char *) malloc(sizeof(char)*max_size);
+    char * device_name = (char *) malloc(sizeof(char)*max_size);
+    char * driver_version = (char *) malloc(sizeof(char)*max_size);
+    char * opencl_c_version = (char *) malloc(sizeof(char)*max_size);
+    cl_uint compute_units; // = (cl_uint *) malloc(sizeof(cl_uint));
+    cl_uint max_work_item_dimensions; // = (cl_uint *) malloc(sizeof(cl_uint));
+    clGetPlatformInfo(platform_id[0], CL_PLATFORM_VERSION, max_size, platform_name, NULL);
+    clGetDeviceInfo(device_id, CL_DEVICE_NAME, max_size, device_name, NULL);
+    clGetDeviceInfo(device_id, CL_DRIVER_VERSION, max_size, driver_version, NULL);
+    clGetDeviceInfo(device_id, CL_DEVICE_OPENCL_C_VERSION, max_size, opencl_c_version, NULL);
+    clGetDeviceInfo(device_id, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_uint), &compute_units, NULL);
+    clGetDeviceInfo(device_id, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(cl_uint), &max_work_item_dimensions, NULL);
+
+    printf("Platform Count: %d \n", num_platforms);
+    printf("Device Count on Platform 1: %d \n", num_devices);
+    printf("Device: %s \n", device_name);
+    printf("Hardware version: %s \n", platform_name);
+    printf("Driver version: %s \n", driver_version);
+    printf("OpenCL C version: %s \n", opencl_c_version);
+    printf("Parallel Compute units: %u \n", compute_units);
+    printf("Max Work Item Dimensions: %u \n", max_work_item_dimensions);
+
+    free(platform_name);
+    free(device_name);
+    free(driver_version);
+    free(opencl_c_version);
 
 }
