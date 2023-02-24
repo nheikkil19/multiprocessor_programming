@@ -28,21 +28,27 @@ int main(void) {
     cl_context context;                 // compute context
     cl_command_queue commands;          // compute command queue
 
-
+    clock_t start, end;
+    double timeElapsed;
 
     // =========================================
     // Read image
+    start = clock();
     err = lodepng_decode32_file(&image, &w, &h, filenameIn);
     if (err) {
         printf("Error %u\n", err);
         return 1;
     }
     else {
-        printf("w = %u, h = %u\n", w, h);
+        printf("Image dimensions: w = %u, h = %u\n\n", w, h);
     }
+    end = clock();
+    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC * 1000;
+    printf("Read file: %.0f ms\n", timeElapsed);
 
     // =======================================
     // Prepare OpenCL
+    start = clock();
     err = clGetPlatformIDs(0, NULL, &num_platforms);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to get the number of platforms!\n");
@@ -73,33 +79,48 @@ int main(void) {
         printf("Error: Failed to create a command commands!\n");
         return 1;
     }
+    end = clock();
+    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC * 1000;
+    printf("Prepare OpenCL: %.0f ms\n", timeElapsed);
 
     // ========================================
     // Convert to grayscale
+    start = clock();
     cl_mem *imageGray = (cl_mem *) malloc(sizeof(cl_mem));
     err = convertGrayscale(image, w, h, p, imageGray, device_id, context, commands);
     if (err) {
         printf("Error: Failed to convert image to grayscale!\n");
         return 1;
     }
+    end = clock();
+    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC * 1000;
+    printf("Convert to grayscale: %.0f ms\n", timeElapsed);
 
     // ============================================
     // Apply filter
+    start = clock();
     unsigned char *imageOut = (unsigned char *) malloc(sizeof(unsigned char) * w * h);
     err = applyFilter(imageGray, w, h, imageOut, device_id, context, commands);
     if (err) {
         printf("Error: Failed to apply filter!\n");
         return 1;
     }
+    end = clock();
+    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC * 1000;
+    printf("Apply filter: %.0f ms\n", timeElapsed);
 
     // ==============================================
     // Encode to file
+    start = clock();
     LodePNGColorType colorType;
     colorType = LCT_GREY;
     err = lodepng_encode_file(filenameOut, imageOut, w, h, colorType, 8);
     if (err) {
         printf("Error %u\n", err);
     }
+    end = clock();
+    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC * 1000;
+    printf("Save file: %.0f ms\n", timeElapsed);
 
     // ================================
     // Free variables
@@ -110,6 +131,7 @@ int main(void) {
     clReleaseCommandQueue(commands);
     clReleaseContext(context);
 
+    printf("\n");
     printSystemInfo(device_id, platform_id, num_platforms, num_devices);
     return 0;
 }
