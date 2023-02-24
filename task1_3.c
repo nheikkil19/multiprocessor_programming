@@ -4,9 +4,9 @@
 #include "lodepng.h"
 #include <CL/cl.h>
 
-int convertGrayscale(unsigned char *image, unsigned w, unsigned h, unsigned p, unsigned char *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands);
+int convertGrayscale(unsigned char *image, unsigned w, unsigned h, unsigned p, cl_mem *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands);
 
-int applyFilter(unsigned char *image, unsigned w, unsigned h, unsigned char *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands);
+int applyFilter(cl_mem *image, unsigned w, unsigned h, unsigned char *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands);
 
 
 int main(void) {
@@ -15,9 +15,9 @@ int main(void) {
     unsigned char *image;
     unsigned w, h, p = 4;
     unsigned err;
-    char filenameIn[] = "dataset\\im2.png";
-    char filenameOut[] = "dataset\\im2_gray.png";
-    
+    char filenameIn[] = "dataset\\im0.png";
+    char filenameOut[] = "dataset\\im0_gray.png";
+
 
 
     // OpenCL variables
@@ -81,7 +81,7 @@ int main(void) {
 
     // ========================================
     // Convert to grayscale
-    unsigned char *imageGray = (unsigned char *) malloc(sizeof(unsigned char) * w * h);
+    cl_mem *imageGray = (cl_mem *) malloc(sizeof(cl_mem));
     err = convertGrayscale(image, w, h, p, imageGray, device_id, context, commands);
     if (err) {
         printf("Error: Failed to convert image to grayscale!\n");
@@ -128,7 +128,7 @@ int main(void) {
 }
 
 
-int convertGrayscale(unsigned char *image, unsigned w, unsigned h, unsigned p, unsigned char *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands) {
+int convertGrayscale(unsigned char *image, unsigned w, unsigned h, unsigned p, cl_mem *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands) {
 
     int err = 0;
     size_t global = 1024;               // global domain size for our calculation
@@ -157,7 +157,7 @@ int convertGrayscale(unsigned char *image, unsigned w, unsigned h, unsigned p, u
         "}";
 
 
-    clImageIn = clCreateBuffer(context,  CL_MEM_READ_ONLY,  sizeof(unsigned char) * h * w * p, NULL, NULL);
+    clImageIn = clCreateBuffer(context,  CL_MEM_READ_WRITE,  sizeof(unsigned char) * h * w * p, NULL, NULL);
     clImageOut = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(unsigned char) * h * w, NULL, NULL);
     if (!clImageIn || !clImageOut) {
         printf("Error: Failed to allocate device memory!\n");
@@ -218,14 +218,14 @@ int convertGrayscale(unsigned char *image, unsigned w, unsigned h, unsigned p, u
     clFinish(commands);
 
     // unsigned char *temp = (unsigned char * ) malloc(sizeof(unsigned char) * w *h);
-    err = clEnqueueReadBuffer( commands, clImageOut, CL_TRUE, 0, sizeof(unsigned char) * w* h, imageOut, 0, NULL, NULL );
-    if (err != CL_SUCCESS) {
-        printf("Error: Failed to read output array! %d\n", err);
-        return 1;
-    }
+    // err = clEnqueueReadBuffer( commands, clImageOut, CL_TRUE, 0, sizeof(unsigned char) * w* h, imageOut, 0, NULL, NULL );
+    // if (err != CL_SUCCESS) {
+    //     printf("Error: Failed to read output array! %d\n", err);
+    //     return 1;
+    // }
     // free(temp);
 
-    // *imageOut = clImageOut;
+    *imageOut = clImageOut;
 
     clFlush(commands);
 
@@ -236,7 +236,7 @@ int convertGrayscale(unsigned char *image, unsigned w, unsigned h, unsigned p, u
     return 0;
 }
 
-int applyFilter(unsigned char *image, unsigned w, unsigned h, unsigned char *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands) {
+int applyFilter(cl_mem *image, unsigned w, unsigned h, unsigned char *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands) {
 
     int err = 0;
     size_t global = 1024;               // global domain size for our calculation
@@ -286,8 +286,8 @@ int applyFilter(unsigned char *image, unsigned w, unsigned h, unsigned char *ima
         "}";
 
 
-    // clImageIn = *image;
-    clImageIn = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(unsigned char) * h * w, NULL, NULL);
+    clImageIn = *image;
+    // clImageIn = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(unsigned char) * h * w, NULL, NULL);
     clImageOut = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(unsigned char) * h * w, NULL, NULL);
     clFilter = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(float) * filtersize, NULL, NULL);
     if (!clImageIn || !clImageOut || !clFilter) {
@@ -296,7 +296,7 @@ int applyFilter(unsigned char *image, unsigned w, unsigned h, unsigned char *ima
     }
 
     err = clEnqueueWriteBuffer(commands, clFilter, CL_TRUE, 0, sizeof(float) * filtersize, filter, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(commands, clImageIn, CL_TRUE, 0, sizeof(unsigned char) * w*h, image, 0, NULL, NULL);
+    // err |= clEnqueueWriteBuffer(commands, clImageIn, CL_TRUE, 0, sizeof(unsigned char) * w*h, image, 0, NULL, NULL);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to write to source array!\n");
         return 1;
