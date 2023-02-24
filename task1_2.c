@@ -11,14 +11,13 @@ const char *programSource = "                                   \n" \
 "__kernel void addMatrix(                                       \n" \
 "   __global unsigned * A,                                      \n" \
 "   __global unsigned * B,                                      \n" \
-"   __global unsigned * C)                                      \n" \
-"   {                                                           \n" \
-"    int w, h;                                             \n" \
-"    w = 100;                                                   \n" \
-"    h = 100;                                                   \n" \
+"   __global unsigned * C,                                      \n" \
+"    unsigned w,                                                \n" \
+"    unsigned h                                                 \n" \
+"   ) {                                                         \n" \
 "    for (int i=0; i<h; i++) {                                  \n" \
 "        for (int j=0; j<w; j++) {                              \n" \
-"            C[ w * i + j ] = A[ w * i + j ] + B[ w * i + j ];\n" \
+"            C[ w*i + j ] = A[ w*i + j ] + B[ w*i + j ];        \n" \
 "        }                                                      \n" \
 "    }                                                          \n" \
 "}                                                              \n" \
@@ -26,6 +25,7 @@ const char *programSource = "                                   \n" \
 
 void addMatrix(unsigned * a, unsigned * b, unsigned * out);
 void add_matrix(unsigned * a, unsigned * b, unsigned * out);
+void printSystemInfo(cl_device_id device_id, cl_platform_id *platform_id, cl_uint num_platforms, cl_uint num_devices);
 
 int main(void) {
 
@@ -168,7 +168,8 @@ void add_matrix(unsigned * a, unsigned * b, unsigned * c) {
     err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &A);
     err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &B);
     err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &C);
-    // err |= clSetKernelArg(kernel, 3, sizeof(unsigned int), &count);
+    err |= clSetKernelArg(kernel, 3, sizeof(int), &w);
+    err |= clSetKernelArg(kernel, 4, sizeof(int), &h);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to set kernel arguments! %d\n", err);
         exit(1);
@@ -206,14 +207,17 @@ void add_matrix(unsigned * a, unsigned * b, unsigned * c) {
     clReleaseCommandQueue(commands);
     clReleaseContext(context);
 
-    // Get system info
+    printSystemInfo(device_id, platform_id, num_platforms, num_devices);
+}
+
+void printSystemInfo(cl_device_id device_id, cl_platform_id *platform_id, cl_uint num_platforms, cl_uint num_devices) {
     size_t max_size = 100;
     char * platform_name = (char *) malloc(sizeof(char)*max_size);
     char * device_name = (char *) malloc(sizeof(char)*max_size);
     char * driver_version = (char *) malloc(sizeof(char)*max_size);
     char * opencl_c_version = (char *) malloc(sizeof(char)*max_size);
-    cl_uint compute_units; // = (cl_uint *) malloc(sizeof(cl_uint));
-    cl_uint max_work_item_dimensions; // = (cl_uint *) malloc(sizeof(cl_uint));
+    cl_uint compute_units;
+    cl_uint max_work_item_dimensions;
     clGetPlatformInfo(platform_id[0], CL_PLATFORM_VERSION, max_size, platform_name, NULL);
     clGetDeviceInfo(device_id, CL_DEVICE_NAME, max_size, device_name, NULL);
     clGetDeviceInfo(device_id, CL_DRIVER_VERSION, max_size, driver_version, NULL);
@@ -234,5 +238,4 @@ void add_matrix(unsigned * a, unsigned * b, unsigned * c) {
     free(device_name);
     free(driver_version);
     free(opencl_c_version);
-
 }

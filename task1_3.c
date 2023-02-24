@@ -8,21 +8,16 @@ int convertGrayscale(unsigned char *image, unsigned w, unsigned h, unsigned p, c
 
 int applyFilter(cl_mem *image, unsigned w, unsigned h, unsigned char *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands);
 
+void printSystemInfo(cl_device_id device_id, cl_platform_id *platform_id, cl_uint num_platforms, cl_uint num_devices);
 
 int main(void) {
 
-    // Read image. from lodepng examples
+    // Variables
     unsigned char *image;
     unsigned w, h, p = 4;
     unsigned err;
     char filenameIn[] = "dataset\\im0.png";
     char filenameOut[] = "dataset\\im0_gray.png";
-
-
-
-    // OpenCL variables
-    // size_t global;                      // global domain size for our calculation
-    // size_t local;                       // local domain size for our calculation
 
     cl_uint num_platforms;
     cl_uint num_devices;
@@ -50,7 +45,7 @@ int main(void) {
     // Prepare OpenCL
     err = clGetPlatformIDs(0, NULL, &num_platforms);
     if (err != CL_SUCCESS) {
-        printf("Error: Failed to get platform id!\n");
+        printf("Error: Failed to get the number of platforms!\n");
         return 1;
     }
     platform_id = (cl_platform_id *) malloc(sizeof(cl_platform_id) * num_platforms);
@@ -88,14 +83,6 @@ int main(void) {
         return 1;
     }
 
-    // LodePNGColorType colorType;
-    // colorType = LCT_GREY;
-    // err = lodepng_encode_file(filenameOut, (unsigned char *) imageGray, w, h, colorType, 8);
-    // if (err) {
-    //     printf("Error %u\n", err);
-    // }
-
-
     // ============================================
     // Apply filter
     unsigned char *imageOut = (unsigned char *) malloc(sizeof(unsigned char) * w * h);
@@ -123,7 +110,7 @@ int main(void) {
     clReleaseCommandQueue(commands);
     clReleaseContext(context);
 
-
+    printSystemInfo(device_id, platform_id, num_platforms, num_devices);
     return 0;
 }
 
@@ -157,7 +144,7 @@ int convertGrayscale(unsigned char *image, unsigned w, unsigned h, unsigned p, c
         "}";
 
 
-    clImageIn = clCreateBuffer(context,  CL_MEM_READ_WRITE,  sizeof(unsigned char) * h * w * p, NULL, NULL);
+    clImageIn = clCreateBuffer(context,  CL_MEM_READ_ONLY,  sizeof(unsigned char) * h * w * p, NULL, NULL);
     clImageOut = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(unsigned char) * h * w, NULL, NULL);
     if (!clImageIn || !clImageOut) {
         printf("Error: Failed to allocate device memory!\n");
@@ -204,26 +191,12 @@ int convertGrayscale(unsigned char *image, unsigned w, unsigned h, unsigned p, c
         return 1;
     }
 
-    // err = clGetKernelWorkGroupInfo(kernel, device_id, CL_KERNEL_WORK_GROUP_SIZE, sizeof(local), &local, NULL);
-    // if (err != CL_SUCCESS) {
-    //     printf("Error: Failed to retrieve kernel work group info! %d\n", err);
-    //     exit(1);
-    // }
-
     err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, &local, 0, NULL, NULL);
     if (err) {
         printf("Error: Failed to execute kernel!\n");
         return 1;
     }
     clFinish(commands);
-
-    // unsigned char *temp = (unsigned char * ) malloc(sizeof(unsigned char) * w *h);
-    // err = clEnqueueReadBuffer( commands, clImageOut, CL_TRUE, 0, sizeof(unsigned char) * w* h, imageOut, 0, NULL, NULL );
-    // if (err != CL_SUCCESS) {
-    //     printf("Error: Failed to read output array! %d\n", err);
-    //     return 1;
-    // }
-    // free(temp);
 
     *imageOut = clImageOut;
 
@@ -245,7 +218,7 @@ int applyFilter(cl_mem *image, unsigned w, unsigned h, unsigned char *imageOut, 
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
 
-    // create filter
+    // Create filter
     unsigned filterdim = 5;
     unsigned filtersize = filterdim * filterdim;
     float *filter = (float *) malloc(sizeof(float) * filtersize);
@@ -254,49 +227,47 @@ int applyFilter(cl_mem *image, unsigned w, unsigned h, unsigned char *imageOut, 
     }
 
     char *programSource = "     \n" \
-        "__kernel void applyFilter(\n" \
-        "    __global unsigned char *inImage,\n" \
-        "    __global unsigned char *outImage,\n" \
-        "    __global float *filter,\n" \
-        "    unsigned w,\n" \
-        "    unsigned h,\n" \
-        "    unsigned filterdim\n" \
-        ") {\n" \
-        "   int mid = filterdim / 2;\n" \
-        "   int xx, yy;\n" \
-        "   float sum;\n" \
-        "   for (int i=0; i<h; i++) {\n" \
-        "       for (int j=0; j<w; j++) {\n" \
-        "           sum = 0;\n" \
-        "           for (int y=0; y<filterdim; y++) {\n" \
-        "               yy = i+y-mid;\n" \
-        "               if ( yy >= 0 && yy < h ) {\n" \
-        "                   for (int x=0; x<filterdim; x++) {\n" \
-        "                       xx = j+x-mid;\n" \
-        "                       if ( xx >= 0 && xx < w ) {\n" \
-        "                           sum += inImage[w * yy + xx] *\n" \
-        "                           filter[ filterdim*y + x];\n" \
-        "                       }\n" \
-        "                    }\n" \
-        "                }\n" \
-        "            }\n" \
-        "            outImage[ w*i + j ] = (unsigned char) sum;\n" \
-        "        }\n" \
-        "    }\n" \
+        "__kernel void applyFilter(             \n" \
+        "    __global unsigned char *inImage,   \n" \
+        "    __global unsigned char *outImage,  \n" \
+        "    __global float *filter,            \n" \
+        "    unsigned w,                        \n" \
+        "    unsigned h,                        \n" \
+        "    unsigned filterdim                 \n" \
+        ") {                                    \n" \
+        "   int mid = filterdim / 2;            \n" \
+        "   int xx, yy;                         \n" \
+        "   float sum;                          \n" \
+        "   for (int i=0; i<h; i++) {           \n" \
+        "       for (int j=0; j<w; j++) {       \n" \
+        "           sum = 0;                            \n" \
+        "           for (int y=0; y<filterdim; y++) {   \n" \
+        "               yy = i+y-mid;                   \n" \
+        "               if ( yy >= 0 && yy < h ) {                  \n" \
+        "                   for (int x=0; x<filterdim; x++) {       \n" \
+        "                       xx = j+x-mid;                       \n" \
+        "                       if ( xx >= 0 && xx < w ) {          \n" \
+        "                           sum += inImage[w * yy + xx] *   \n" \
+        "                           filter[ filterdim*y + x];       \n" \
+        "                       }       \n" \
+        "                    }          \n" \
+        "                }              \n" \
+        "            }                  \n" \
+        "            outImage[ w*i + j ] = (unsigned char) sum;     \n" \
+        "        }          \n" \
+        "    }              \n" \
         "}";
 
 
     clImageIn = *image;
-    // clImageIn = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(unsigned char) * h * w, NULL, NULL);
-    clImageOut = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(unsigned char) * h * w, NULL, NULL);
-    clFilter = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(float) * filtersize, NULL, NULL);
+    clImageOut = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(unsigned char) * h * w, NULL, NULL);
+    clFilter = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(float) * filtersize, NULL, NULL);
     if (!clImageIn || !clImageOut || !clFilter) {
         printf("Error: Failed to allocate device memory!\n");
         return 1;
     }
 
     err = clEnqueueWriteBuffer(commands, clFilter, CL_TRUE, 0, sizeof(float) * filtersize, filter, 0, NULL, NULL);
-    // err |= clEnqueueWriteBuffer(commands, clImageIn, CL_TRUE, 0, sizeof(unsigned char) * w*h, image, 0, NULL, NULL);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to write to source array!\n");
         return 1;
@@ -337,12 +308,6 @@ int applyFilter(cl_mem *image, unsigned w, unsigned h, unsigned char *imageOut, 
         return 1;
     }
 
-    // err = clGetKernelWorkGroupInfo(kernel, device_id, CL_KERNEL_WORK_GROUP_SIZE, sizeof(local), &local, NULL);
-    // if (err != CL_SUCCESS) {
-    //     printf("Error: Failed to retrieve kernel work group info! %d\n", err);
-    //     exit(1);
-    // }
-
     err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, &local, 0, NULL, NULL);
     if (err) {
         printf("Error: Failed to execute kernel!\n");
@@ -350,14 +315,13 @@ int applyFilter(cl_mem *image, unsigned w, unsigned h, unsigned char *imageOut, 
     }
 
     clFinish(commands);
-    // float * temp = (float *) malloc(sizeof(float) * w * h);
-    // err = clEnqueueReadBuffer( commands, clImageOut, CL_TRUE, 0, sizeof(float) * w * h, temp, 0, NULL, NULL );
+
     err = clEnqueueReadBuffer( commands, clImageOut, CL_TRUE, 0, sizeof(unsigned char) * w * h, imageOut, 0, NULL, NULL );
     if (err != CL_SUCCESS) {
         printf("Error: Failed to read output array! %d\n", err);
         return 1;
     }
-    // free(temp);
+
     clFlush(commands);
 
     clReleaseMemObject(clImageIn);
@@ -371,31 +335,32 @@ int applyFilter(cl_mem *image, unsigned w, unsigned h, unsigned char *imageOut, 
 }
 
 
-// void applyFilter(
-//     int *inImage,
-//     float *outImage,
-//     float *filter,
-//     unsigned w,
-//     unsigned h,
-//     unsigned filterdim
-// ) {
-//     int mid = filterdim / 2;
-//     int xx, yy;
-//     for (int i=0; i<h; i++) {
-//         for (int j=0; j<w; j++) {
-//             outImage[ w*i + j ] = 0;
-//             for (int y=0; y<filterdim; y++) {
-//                 yy = i+y-mid;
-//                 if ( yy >= 0 && yy < h ) {
-//                     for (int x=0; x<filterdim; x++) {
-//                         xx = j+x-mid;
-//                         if ( xx >= 0 && xx < w ) {
-//                             outImage[ w*i + j ] += inImage[w * yy + xx] *
-//                             filter[ filterdim*y + x];
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-//     }
-// }
+void printSystemInfo(cl_device_id device_id, cl_platform_id *platform_id, cl_uint num_platforms, cl_uint num_devices) {
+    size_t max_size = 100;
+    char * platform_name = (char *) malloc(sizeof(char)*max_size);
+    char * device_name = (char *) malloc(sizeof(char)*max_size);
+    char * driver_version = (char *) malloc(sizeof(char)*max_size);
+    char * opencl_c_version = (char *) malloc(sizeof(char)*max_size);
+    cl_uint compute_units;
+    cl_uint max_work_item_dimensions;
+    clGetPlatformInfo(platform_id[0], CL_PLATFORM_VERSION, max_size, platform_name, NULL);
+    clGetDeviceInfo(device_id, CL_DEVICE_NAME, max_size, device_name, NULL);
+    clGetDeviceInfo(device_id, CL_DRIVER_VERSION, max_size, driver_version, NULL);
+    clGetDeviceInfo(device_id, CL_DEVICE_OPENCL_C_VERSION, max_size, opencl_c_version, NULL);
+    clGetDeviceInfo(device_id, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_uint), &compute_units, NULL);
+    clGetDeviceInfo(device_id, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(cl_uint), &max_work_item_dimensions, NULL);
+
+    printf("Platform Count: %d \n", num_platforms);
+    printf("Device Count on Platform 1: %d \n", num_devices);
+    printf("Device: %s \n", device_name);
+    printf("Hardware version: %s \n", platform_name);
+    printf("Driver version: %s \n", driver_version);
+    printf("OpenCL C version: %s \n", opencl_c_version);
+    printf("Parallel Compute units: %u \n", compute_units);
+    printf("Max Work Item Dimensions: %u \n", max_work_item_dimensions);
+
+    free(platform_name);
+    free(device_name);
+    free(driver_version);
+    free(opencl_c_version);
+}
