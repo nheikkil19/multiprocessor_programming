@@ -4,9 +4,9 @@
 #include "lodepng.h"
 #include <CL/cl.h>
 
-int convertGrayscale(unsigned char *image, unsigned w, unsigned h, unsigned p, cl_mem *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands);
+int convertGrayscale(unsigned char *image, unsigned w, unsigned h, unsigned p, unsigned char *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands);
 
-int applyFilter(cl_mem *image, unsigned w, unsigned h, unsigned char *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands);
+int applyFilter(unsigned char *image, unsigned w, unsigned h, unsigned char *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands);
 
 
 int main(void) {
@@ -15,9 +15,10 @@ int main(void) {
     unsigned char *image;
     unsigned w, h, p = 4;
     unsigned err;
-    char filenameIn[] = "dataset\\im0.png";
-    char filenameOut[] = "dataset\\im0_gray.png";
-    unsigned char *imageOut = (unsigned char *) malloc(sizeof(unsigned char) * w * h);
+    char filenameIn[] = "dataset\\im2.png";
+    char filenameOut[] = "dataset\\im2_gray.png";
+    
+
 
     // OpenCL variables
     // size_t global;                      // global domain size for our calculation
@@ -80,15 +81,24 @@ int main(void) {
 
     // ========================================
     // Convert to grayscale
-    cl_mem *imageGray = (cl_mem *) malloc(sizeof(cl_mem));
+    unsigned char *imageGray = (unsigned char *) malloc(sizeof(unsigned char) * w * h);
     err = convertGrayscale(image, w, h, p, imageGray, device_id, context, commands);
     if (err) {
         printf("Error: Failed to convert image to grayscale!\n");
         return 1;
     }
 
+    // LodePNGColorType colorType;
+    // colorType = LCT_GREY;
+    // err = lodepng_encode_file(filenameOut, (unsigned char *) imageGray, w, h, colorType, 8);
+    // if (err) {
+    //     printf("Error %u\n", err);
+    // }
+
+
     // ============================================
     // Apply filter
+    unsigned char *imageOut = (unsigned char *) malloc(sizeof(unsigned char) * w * h);
     err = applyFilter(imageGray, w, h, imageOut, device_id, context, commands);
     if (err) {
         printf("Error: Failed to apply filter!\n");
@@ -118,7 +128,7 @@ int main(void) {
 }
 
 
-int convertGrayscale(unsigned char *image, unsigned w, unsigned h, unsigned p, cl_mem *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands) {
+int convertGrayscale(unsigned char *image, unsigned w, unsigned h, unsigned p, unsigned char *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands) {
 
     int err = 0;
     size_t global = 1024;               // global domain size for our calculation
@@ -208,25 +218,25 @@ int convertGrayscale(unsigned char *image, unsigned w, unsigned h, unsigned p, c
     clFinish(commands);
 
     // unsigned char *temp = (unsigned char * ) malloc(sizeof(unsigned char) * w *h);
-    // err = clEnqueueReadBuffer( commands, clImageOut, CL_TRUE, 0, sizeof(unsigned char) * w* h, temp, 0, NULL, NULL );
-    // if (err != CL_SUCCESS) {
-    //     printf("Error: Failed to read output array! %d\n", err);
-    //     return 1;
-    // }
+    err = clEnqueueReadBuffer( commands, clImageOut, CL_TRUE, 0, sizeof(unsigned char) * w* h, imageOut, 0, NULL, NULL );
+    if (err != CL_SUCCESS) {
+        printf("Error: Failed to read output array! %d\n", err);
+        return 1;
+    }
     // free(temp);
 
-    *imageOut = clImageOut;
+    // *imageOut = clImageOut;
 
     clFlush(commands);
 
     clReleaseMemObject(clImageIn);
-    // clReleaseProgram(program);
-    // clReleaseKernel(kernel);
+    clReleaseProgram(program);
+    clReleaseKernel(kernel);
 
     return 0;
 }
 
-int applyFilter(cl_mem *image, unsigned w, unsigned h, unsigned char *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands) {
+int applyFilter(unsigned char *image, unsigned w, unsigned h, unsigned char *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands) {
 
     int err = 0;
     size_t global = 1024;               // global domain size for our calculation
@@ -236,53 +246,57 @@ int applyFilter(cl_mem *image, unsigned w, unsigned h, unsigned char *imageOut, 
     cl_kernel kernel;                   // compute kernel
 
     // create filter
-    unsigned filtersize = 25;
-    float filter[filtersize];
+    unsigned filterdim = 5;
+    unsigned filtersize = filterdim * filterdim;
+    float *filter = (float *) malloc(sizeof(float) * filtersize);
     for (int i=0; i<filtersize; i++) {
-        filter[i] = 1/filtersize;
+        filter[i] = (float) 1/filtersize;
     }
 
     char *programSource = "     \n" \
         "__kernel void applyFilter(\n" \
         "    __global unsigned char *inImage,\n" \
-        "    __global float *outImage,\n" \
+        "    __global unsigned char *outImage,\n" \
         "    __global float *filter,\n" \
         "    unsigned w,\n" \
         "    unsigned h,\n" \
-        "    unsigned filtersize\n" \
+        "    unsigned filterdim\n" \
         ") {\n" \
-        "    unsigned mid = filtersize / 2;\n" \
-        "    unsigned xx, yy;\n" \
-        "    for (int i=0; i<h; i++) {\n" \
-        "        for (int j=0; j<w; j++) {\n" \
-        "            outImage[ w*i + j ] = 0;\n" \
-        "            for (int y=-mid; y<=mid; y++) {\n" \
-        "                yy = i+y;\n" \
-        "                if ( yy >= 0 && yy < h ) {\n" \
-        "                    for (int x=-mid; x<=mid; x++) {\n" \
-        "                        xx = j+x;\n" \
-        "                        if ( xx >= 0 && xx < w ) {\n" \
-        "                            outImage[ w*i + j ] += (inImage[w * (yy) + (xx)] * \n" \
-        "                                filter[ filtersize*(mid+y) + (mid+x)]);\n" \
-        "                        }\n" \
+        "   int mid = filterdim / 2;\n" \
+        "   int xx, yy;\n" \
+        "   float sum;\n" \
+        "   for (int i=0; i<h; i++) {\n" \
+        "       for (int j=0; j<w; j++) {\n" \
+        "           sum = 0;\n" \
+        "           for (int y=0; y<filterdim; y++) {\n" \
+        "               yy = i+y-mid;\n" \
+        "               if ( yy >= 0 && yy < h ) {\n" \
+        "                   for (int x=0; x<filterdim; x++) {\n" \
+        "                       xx = j+x-mid;\n" \
+        "                       if ( xx >= 0 && xx < w ) {\n" \
+        "                           sum += inImage[w * yy + xx] *\n" \
+        "                           filter[ filterdim*y + x];\n" \
+        "                       }\n" \
         "                    }\n" \
         "                }\n" \
         "            }\n" \
+        "            outImage[ w*i + j ] = (unsigned char) sum;\n" \
         "        }\n" \
         "    }\n" \
         "}";
 
 
     // clImageIn = *image;
-    // clImageIn = clCreateBuffer(context, CL_MEM_COPY_HOST_PTR, sizeof(unsigned char) * h * w, image, NULL);
-    clImageOut = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(unsigned char) * h * w, NULL, NULL);
-    clFilter = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(float) * filtersize, NULL, NULL);
+    clImageIn = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(unsigned char) * h * w, NULL, NULL);
+    clImageOut = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(unsigned char) * h * w, NULL, NULL);
+    clFilter = clCreateBuffer(context, CL_MEM_READ_WRITE, sizeof(float) * filtersize, NULL, NULL);
     if (!clImageIn || !clImageOut || !clFilter) {
         printf("Error: Failed to allocate device memory!\n");
         return 1;
     }
 
     err = clEnqueueWriteBuffer(commands, clFilter, CL_TRUE, 0, sizeof(float) * filtersize, filter, 0, NULL, NULL);
+    err |= clEnqueueWriteBuffer(commands, clImageIn, CL_TRUE, 0, sizeof(unsigned char) * w*h, image, 0, NULL, NULL);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to write to source array!\n");
         return 1;
@@ -312,12 +326,12 @@ int applyFilter(cl_mem *image, unsigned w, unsigned h, unsigned char *imageOut, 
     }
 
     err = 0;
-    err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), image);
+    err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &clImageIn);
     err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &clImageOut);
     err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &clFilter);
     err |= clSetKernelArg(kernel, 3, sizeof(unsigned), &w);
     err |= clSetKernelArg(kernel, 4, sizeof(unsigned), &h);
-    err |= clSetKernelArg(kernel, 5, sizeof(unsigned), &filtersize);
+    err |= clSetKernelArg(kernel, 5, sizeof(unsigned), &filterdim);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to set kernel arguments! %d\n", err);
         return 1;
@@ -336,46 +350,48 @@ int applyFilter(cl_mem *image, unsigned w, unsigned h, unsigned char *imageOut, 
     }
 
     clFinish(commands);
-
-    err = clEnqueueReadBuffer( commands, *image, CL_TRUE, 0, sizeof(unsigned char) * w* h, imageOut, 0, NULL, NULL );
+    // float * temp = (float *) malloc(sizeof(float) * w * h);
+    // err = clEnqueueReadBuffer( commands, clImageOut, CL_TRUE, 0, sizeof(float) * w * h, temp, 0, NULL, NULL );
+    err = clEnqueueReadBuffer( commands, clImageOut, CL_TRUE, 0, sizeof(unsigned char) * w * h, imageOut, 0, NULL, NULL );
     if (err != CL_SUCCESS) {
         printf("Error: Failed to read output array! %d\n", err);
         return 1;
     }
-
+    // free(temp);
     clFlush(commands);
 
-    clReleaseMemObject(*image);
+    clReleaseMemObject(clImageIn);
     clReleaseMemObject(clImageOut);
     clReleaseMemObject(clFilter);
     clReleaseProgram(program);
     clReleaseKernel(kernel);
 
+    free(filter);
     return 0;
 }
 
 
 // void applyFilter(
-//     unsigned char *inImage,
-//     unsigned char *outImage,
+//     int *inImage,
+//     float *outImage,
 //     float *filter,
 //     unsigned w,
 //     unsigned h,
-//     unsigned filtersize
+//     unsigned filterdim
 // ) {
-//     unsigned mid = filtersize / 2;
-//     unsigned xx, yy;
+//     int mid = filterdim / 2;
+//     int xx, yy;
 //     for (int i=0; i<h; i++) {
 //         for (int j=0; j<w; j++) {
 //             outImage[ w*i + j ] = 0;
-//             for (int y=-mid; y<=mid; y++) {
-//                 yy = i+y;
+//             for (int y=0; y<filterdim; y++) {
+//                 yy = i+y-mid;
 //                 if ( yy >= 0 && yy < h ) {
-//                     for (int x=-mid; x<=mid; x++) {
-//                         xx = j+x;
+//                     for (int x=0; x<filterdim; x++) {
+//                         xx = j+x-mid;
 //                         if ( xx >= 0 && xx < w ) {
-//                             outImage[ w*i + j ] += (unsigned) inImage[w * (yy) + (xx)] *
-//                             filter[ filtersize*(mid+y) + (mid+x)];
+//                             outImage[ w*i + j ] += inImage[w * yy + xx] *
+//                             filter[ filterdim*y + x];
 //                         }
 //                     }
 //                 }
