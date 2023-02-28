@@ -58,8 +58,9 @@ void calcZNCC(unsigned char *image1, unsigned char *image2, unsigned char **imag
     double imgAvg1, imgAvg2;
     double zncc1, zncc2, zncc3, zncc;
     double znccBest, bestD;
-    int xx, yy;
+    int x, y;
     unsigned count;
+    int pixel;
 
     *imageOut = (unsigned char *) malloc(sizeof(unsigned char) * w * h);
 
@@ -73,16 +74,16 @@ void calcZNCC(unsigned char *image1, unsigned char *image2, unsigned char **imag
                 imgAvg2 = 0;
                 count = 0;
                 for (int win_y=0; win_y<WIN_SIZE; win_y++) {
-                    yy = j + win_y - WIN_SIZE/2;
+                    y = j + win_y - WIN_SIZE/2;
                     // Do not go outside the image
-                    if ( yy >= 0 && yy < h ) {
+                    if ( y >= 0 && y < h ) {
                         for (int win_x=0; win_x<WIN_SIZE; win_x++) {
-                            xx = i + win_x - WIN_SIZE/2;
+                            x = i + win_x - WIN_SIZE/2;
                             // Do not go outside the image
-                            if ( xx >= 0 && xx < w ) {
+                            if ( x >= 0 && x < w ) {
                                 // Add pixel values
-                                imgAvg1 += image1[yy*w + xx];
-                                imgAvg2 += image2[yy*w + xx];
+                                imgAvg1 += image1[y*w + x];
+                                imgAvg2 += image2[y*w + x];
                                 count++;
                             }
                         }
@@ -97,16 +98,16 @@ void calcZNCC(unsigned char *image1, unsigned char *image2, unsigned char **imag
                 zncc2 = 0;
                 zncc3 = 0;
                 for (int win_y=0; win_y<WIN_SIZE; win_y++) {
-                    yy = j + win_y - WIN_SIZE/2;
+                    y = j + win_y - WIN_SIZE/2;
                     // Do not go outside the image
-                    if ( yy >= 0 && yy < h ) {
+                    if ( y >= 0 && y < h ) {
                         for (int win_x=0; win_x<WIN_SIZE; win_x++) {
-                            xx = i + win_x - WIN_SIZE/2;
+                            x = i + win_x - WIN_SIZE/2;
                             // Do not go outside the image
-                            if ( xx-d >= 0 && xx < w ) {
-                                zncc1 += (image1[yy*w + xx] - imgAvg1) * (image2[yy*w + xx-d] - imgAvg2);
-                                zncc2 += sqrt(pow((double)image1[yy*w + xx] - imgAvg1, 2));
-                                zncc3 += sqrt(pow((double)image2[yy*w + xx-d] - imgAvg2, 2));
+                            if ( x-d >= 0 && x < w ) {
+                                zncc1 += (image1[y*w + x] - imgAvg1) * (image2[y*w + x-d] - imgAvg2);
+                                zncc2 += sqrt(pow((double)image1[y*w + x] - imgAvg1, 2));
+                                zncc3 += sqrt(pow((double)image2[y*w + x-d] - imgAvg2, 2));
                             }
                         }
                     }
@@ -165,26 +166,26 @@ void occlusionFill(unsigned char *imageIn, unsigned char **imageOut, unsigned w,
         for (int j=0; j<w; j++) {
             if (imageIn[i*w + j] == 0) {
                 for (int d=1; d<=MAX_DIST; d++) {
-                    for (int ii=-d+1; ii<=d-1; ii++) {
-                        if (i+ii>=0 && i+ii<h) {
-                            if (j-d>=0 && imageIn[(i+ii)*w + j-d] != 0) {
-                                (*imageOut)[i*w + j] = imageIn[(i+ii)*w + j-d];
+                    for (int x=-d+1; x<=d-1; x++) {
+                        if (i+x>=0 && i+x<h) {
+                            if (j-d>=0 && imageIn[(i+x)*w + j-d] != 0) {
+                                (*imageOut)[i*w + j] = imageIn[(i+x)*w + j-d];
                                 break;
                             }
-                            else if (j+d<w && imageIn[(i+ii)*w + j + d] != 0) {
-                                (*imageOut)[i*w + j] = imageIn[(i+ii)*w + j+d];
+                            else if (j+d<w && imageIn[(i+x)*w + j + d] != 0) {
+                                (*imageOut)[i*w + j] = imageIn[(i+x)*w + j+d];
                                 break;
                             }
                         }
                     }
-                    for (int jj=-d; jj<=d; jj++) {
-                        if (j+jj>=0 &&j+jj<w) {
-                            if (i-d>=0 && imageIn[(i-d)*w + j+jj] != 0) {
-                                (*imageOut)[i*w + j] = imageIn[(i-d)*w + j+jj];
+                    for (int y=-d; y<=d; y++) {
+                        if (j+y>=0 &&j+y<w) {
+                            if (i-d>=0 && imageIn[(i-d)*w + j+y] != 0) {
+                                (*imageOut)[i*w + j] = imageIn[(i-d)*w + j+y];
                                 break;
                             }
-                            else if (i+d<h && imageIn[(i+d)*w + j+jj] != 0 ) {
-                                (*imageOut)[i*w + j] = imageIn[(i+d)*w + j+jj];
+                            else if (i+d<h && imageIn[(i+d)*w + j+y] != 0 ) {
+                                (*imageOut)[i*w + j] = imageIn[(i+d)*w + j+y];
                                 break;
                             }
                         }
