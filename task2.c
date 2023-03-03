@@ -211,11 +211,11 @@ int main(void) {
 
     // Variables
     unsigned const MAX_DISP = 260/4;
-    unsigned const WIN_SIZE = 9;
-    unsigned const threshold = 150;
+    unsigned const WIN_SIZE = 15;
+    unsigned const THRESHOLD = 8;
     char file1[] = "dataset\\im0.png";
     char file2[] = "dataset\\im1.png";
-    char file3[] = "dataset\\depthmap.png";
+    char file3[64] = "dataset\\depthmap.png";
     unsigned char *image1, *image2, *imageDs1, *imageDs2, *imageGray1, *imageGray2, *imageZNCC1, *imageZNCC2, *imageNorm1, *imageNorm2, *imageCross, *imageOut;
     unsigned w, h, scaleFactor;
     clock_t start, end;
@@ -267,7 +267,7 @@ int main(void) {
 
     // Cross checking
     start = clock();
-    crossCheck(imageNorm1, imageNorm2, &imageCross, w, h, threshold);
+    crossCheck(imageNorm1, imageNorm2, &imageCross, w, h, THRESHOLD);
     end = clock();
     timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("Cross check: %.3f s\n", timeElapsed);
@@ -282,6 +282,7 @@ int main(void) {
 
     // Save image
     start = clock();
+    sprintf(file3, "dataset\\depthmap_%d_%d.png", WIN_SIZE, THRESHOLD);
     writeImage(file3, imageOut, w, h);
     end = clock();
     timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
