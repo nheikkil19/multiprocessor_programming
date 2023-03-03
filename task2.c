@@ -65,7 +65,6 @@ void calcZNCC(unsigned char *image1, unsigned char *image2, unsigned char **imag
     for (int j=0; j<h; j++) {
         for (int i=0; i<w; i++) {
             znccBest = -1;
-            // for (int d=-max_disp; d<(int)max_disp; d++) {
             for (int d=0; d<max_disp; d++) {
                 // Calculate means over window
                 imgAvg1 = 0;
@@ -146,15 +145,12 @@ void normalizeImage(unsigned char *imageIn, unsigned char **imageOut, unsigned w
 void crossCheck(unsigned char *image1, unsigned char *image2, unsigned char **imageOut, unsigned w, unsigned h, unsigned threshold) {
     *imageOut = (unsigned char *) malloc(sizeof(unsigned char) * w * h);
     int x, y, d;
-    int dp1, dp2;
 
     for (int i=0; i<h; i++) {
         for (int j=0; j<w; j++) {
             y = i * w;
             x = j;
             d = image1[y + x];
-            dp1 = image1[y + x];
-            dp2 = image2[y + x-d];
 
             if ( y + x >= 0 && y + (x - d) >= 0 && y + x < w*h) {
                 if (abs((char)image1[y + x] - (char)image2[y + (x-d)]) > threshold) {
@@ -216,16 +212,10 @@ int main(void) {
     // Variables
     unsigned const MAX_DISP = 260/4;
     unsigned const WIN_SIZE = 9;
+    unsigned const threshold = 150;
     char file1[] = "dataset\\im0.png";
     char file2[] = "dataset\\im1.png";
-    char file3[] = "dataset\\gray1.png";
-    char file4[] = "dataset\\gray2.png";
-    char file5[] = "dataset\\zncc1.png";
-    char file6[] = "dataset\\zncc2.png";
-    char file7[] = "dataset\\norm1.png";
-    char file8[] = "dataset\\norm2.png";
-    char file9[100] = "dataset\\cross.png";
-    char file10[100] = "dataset\\occfi.png";
+    char file3[] = "dataset\\depthmap.png";
     unsigned char *image1, *image2, *imageDs1, *imageDs2, *imageGray1, *imageGray2, *imageZNCC1, *imageZNCC2, *imageNorm1, *imageNorm2, *imageCross, *imageOut;
     unsigned w, h, scaleFactor;
     clock_t start, end;
@@ -259,9 +249,6 @@ int main(void) {
     timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("Grayscale: %.3f s\n", timeElapsed);
 
-    writeImage(file3, imageGray1, w, h);
-    writeImage(file4, imageGray2, w, h);
-
     // Do ZNCC
     start = clock();
     calcZNCC(imageGray1, imageGray2, &imageZNCC1, w, h, MAX_DISP, WIN_SIZE, 1);
@@ -269,9 +256,6 @@ int main(void) {
     end = clock();
     timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("ZNCC: %.3f s\n", timeElapsed);
-
-    writeImage(file5, imageZNCC1, w, h);
-    writeImage(file6, imageZNCC2, w, h);
 
     // Normalize image
     start = clock();
@@ -281,39 +265,27 @@ int main(void) {
     timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("Normalization: %.3f s\n", timeElapsed);
 
-    writeImage(file7, imageNorm1, w, h);
-    writeImage(file8, imageNorm2, w, h);
+    // Cross checking
+    start = clock();
+    crossCheck(imageNorm1, imageNorm2, &imageCross, w, h, threshold);
+    end = clock();
+    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Cross check: %.3f s\n", timeElapsed);
 
-    // lodepng_decode_file(&imageNorm1, &w, &h, file7, LCT_GREY, 8);
-    // lodepng_decode_file(&imageNorm2, &w, &h, file8, LCT_GREY, 8);
-
-    for (int i=4; i<=40; i+=2) {
-        // Cross checking
-        start = clock();
-        crossCheck(imageNorm1, imageNorm2, &imageCross, w, h, i);
-        end = clock();
-        timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-        printf("Cross check %d: %.3f s\n", i, timeElapsed);
-
-        sprintf(file9, "dataset\\cross%d.png", i);
-        writeImage(file9, imageCross, w, h);
-
-        // Occlusion fill
-        start = clock();
-        occlusionFill(imageCross, &imageOut, w, h);
-        end = clock();
-        timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-        printf("Occlusion fill %d: %.3f s\n", i, timeElapsed);
+    // Occlusion fill
+    start = clock();
+    occlusionFill(imageCross, &imageOut, w, h);
+    end = clock();
+    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Occlusion fill: %.3f s\n", timeElapsed);
 
 
-        sprintf(file10, "dataset\\occfi%d.png", i);
-        // Save image
-        start = clock();
-        writeImage(file10, imageOut, w, h);
-        end = clock();
-        timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-        printf("Save file %d: %.3f s\n", i, timeElapsed);
-    }
+    // Save image
+    start = clock();
+    writeImage(file3, imageOut, w, h);
+    end = clock();
+    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Save file: %.3f s\n", timeElapsed);
 
     // Free memory
     free(image1);
