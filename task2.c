@@ -103,13 +103,13 @@ void calcZNCC(unsigned char *image1, unsigned char *image2, unsigned char **imag
                             // Do not go outside the image
                             if ( x >= 0 && x-(d*inv) >= 0 && x < w && x-(d*inv) < w ) {
                                 zncc1 += ((double)image1[y*w + x] - imgAvg1) * ((double)image2[y*w + x-(d*inv)] - imgAvg2);
-                                zncc2 += abs((double)image1[y*w + x] - imgAvg1);
-                                zncc3 += abs((double)image2[y*w + x-(d*inv)] - imgAvg2);
+                                zncc2 += pow((double)image1[y*w + x] - imgAvg1, 2);
+                                zncc3 += pow((double)image2[y*w + x-(d*inv)] - imgAvg2, 2);
                             }
                         }
                     }
                 }
-                zncc = zncc1 / (zncc2 * zncc3);
+                zncc = zncc1 / (sqrt(zncc2) * sqrt(zncc3));
 
                 // Select if better than current best
                 if (zncc > znccBest) {
@@ -211,7 +211,7 @@ int main(void) {
 
     // Variables
     unsigned const MAX_DISP = 260/4;
-    unsigned const WIN_SIZE = 15;
+    unsigned const WIN_SIZE = 9;
     unsigned const THRESHOLD = 8;
     char file1[] = "dataset\\im0.png";
     char file2[] = "dataset\\im1.png";
