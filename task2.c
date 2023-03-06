@@ -48,28 +48,29 @@ void grayscaleImage(unsigned char *imageIn, unsigned char **imageOut, unsigned w
             r = imageIn[i*w*subpixels + j*subpixels + 0];
             g = imageIn[i*w*subpixels + j*subpixels + 1];
             b = imageIn[i*w*subpixels + j*subpixels + 2];
-            (*imageOut)[i*w + j] = (int) (0.299 * r + 0.587 * g + 0.114 * b);
+            (*imageOut)[i*w + j] = (unsigned char) (0.299 * r + 0.587 * g + 0.114 * b);
         }
     }
 }
 
-void calcZNCC(unsigned char *image1, unsigned char *image2, unsigned char **imageOut, unsigned w, unsigned h, unsigned max_disp, unsigned win_size, int inv) {
-    double imgAvg1, imgAvg2;
+void calcZNCC(unsigned char *imageL, unsigned char *imageR, unsigned char **imageOut, unsigned w, unsigned h, unsigned max_disp, unsigned win_size, int inv) {
+    double imgAvgL, imgAvgR;
     double zncc1, zncc2, zncc3, zncc;
     double znccBest, bestD;
     int x, y;
-    unsigned count;
+    unsigned countL, countR;
 
     *imageOut = (unsigned char *) malloc(sizeof(unsigned char) * w * h);
 
     for (int j=0; j<h; j++) {
         for (int i=0; i<w; i++) {
             znccBest = -1;
-            for (int d=0; d<max_disp; d++) {
+            for (int d=0; d<=max_disp; d++) {
                 // Calculate means over window
-                imgAvg1 = 0;
-                imgAvg2 = 0;
-                count = 0;
+                imgAvgL = 0;
+                imgAvgR = 0;
+                countL = 0;
+                countR = 0;
                 for (int win_y=0; win_y<win_size; win_y++) {
                     y = j + win_y - win_size/2;
                     // Do not go outside the image
@@ -79,16 +80,19 @@ void calcZNCC(unsigned char *image1, unsigned char *image2, unsigned char **imag
                             // Do not go outside the image
                             if ( x >= 0 && x < w ) {
                                 // Add pixel values
-                                imgAvg1 += image1[y*w + x];
-                                imgAvg2 += image2[y*w + x];
-                                count++;
+                                imgAvgL += imageL[y*w + x];
+                                countL++;
+                            }
+                            if ( x-d*inv >= 0 && x-d*inv < w ) {
+                                imgAvgR += imageR[y*w + (x-d*inv)];
+                                countR++;
                             }
                         }
                     }
                 }
                 // Calculate mean
-                imgAvg1 = imgAvg1 / count;
-                imgAvg2 = imgAvg2 / count;
+                imgAvgL = imgAvgL / countL;
+                imgAvgR = imgAvgR / countR;
 
                 // Calculate ZNCC
                 zncc1 = 0;
@@ -102,9 +106,9 @@ void calcZNCC(unsigned char *image1, unsigned char *image2, unsigned char **imag
                             x = i + win_x - win_size/2;
                             // Do not go outside the image
                             if ( x >= 0 && x-(d*inv) >= 0 && x < w && x-(d*inv) < w ) {
-                                zncc1 += ((double)image1[y*w + x] - imgAvg1) * ((double)image2[y*w + x-(d*inv)] - imgAvg2);
-                                zncc2 += pow((double)image1[y*w + x] - imgAvg1, 2);
-                                zncc3 += pow((double)image2[y*w + x-(d*inv)] - imgAvg2, 2);
+                                zncc1 += ((double)imageL[y*w + x] - imgAvgL) * ((double)imageR[y*w + x-(d*inv)] - imgAvgR);
+                                zncc2 += pow((double)imageL[y*w + x] - imgAvgL, 2);
+                                zncc3 += pow((double)imageR[y*w + x-(d*inv)] - imgAvgR, 2);
                             }
                         }
                     }
@@ -152,13 +156,11 @@ void crossCheck(unsigned char *image1, unsigned char *image2, unsigned char **im
             x = j;
             d = image1[y + x];
 
-            if ( y + x >= 0 && y + (x - d) >= 0 && y + x < w*h) {
-                if (abs((char)image1[y + x] - (char)image2[y + (x-d)]) > threshold) {
-                    (*imageOut)[y + x] = 0;
-                }
-                else {
-                    (*imageOut)[y + x] = image1[y + x];
-                }
+            if ( y + x - d >= 0 && abs((char)image1[y + x] - (char)image2[y + (x-d)]) > threshold) {
+                (*imageOut)[y + x] = 0;
+            }
+            else {
+                (*imageOut)[y + x] = image1[y + x];
             }
         }
     }
@@ -264,6 +266,9 @@ int main(void) {
     end = clock();
     timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("Normalization: %.3f s\n", timeElapsed);
+    lodepng_encode_file("dataset\\norm1.png", imageNorm1, w, h, LCT_GREY, 8);
+    lodepng_encode_file("dataset\\norm2.png", imageNorm2, w, h, LCT_GREY, 8);
+
 
     // Cross checking
     start = clock();
@@ -271,6 +276,7 @@ int main(void) {
     end = clock();
     timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("Cross check: %.3f s\n", timeElapsed);
+    lodepng_encode_file("dataset\\cross.png", imageCross, w, h, LCT_GREY, 8);
 
     // Occlusion fill
     start = clock();
