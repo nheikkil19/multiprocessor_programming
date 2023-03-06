@@ -217,8 +217,8 @@ int main(void) {
     unsigned const THRESHOLD = 8;
     char file1[] = "dataset\\im0.png";
     char file2[] = "dataset\\im1.png";
-    char file3[64] = "dataset\\depthmap.png";
-    unsigned char *image1, *image2, *imageDs1, *imageDs2, *imageGray1, *imageGray2, *imageZNCC1, *imageZNCC2, *imageNorm1, *imageNorm2, *imageCross, *imageOut;
+    char file3[] = "dataset\\depthmap.png";
+    unsigned char *image1, *image2, *imageDs1, *imageDs2, *imageGray1, *imageGray2, *imageZNCC1, *imageZNCC2, *imageCross, *imageOcc, *imageOut;
     unsigned w, h, scaleFactor;
     clock_t start, end;
     double timeElapsed;
@@ -259,36 +259,29 @@ int main(void) {
     timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("ZNCC: %.3f s\n", timeElapsed);
 
-    // Normalize image
-    start = clock();
-    normalizeImage(imageZNCC1, &imageNorm1, w, h);
-    normalizeImage(imageZNCC2, &imageNorm2, w, h);
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Normalization: %.3f s\n", timeElapsed);
-    lodepng_encode_file("dataset\\norm1.png", imageNorm1, w, h, LCT_GREY, 8);
-    lodepng_encode_file("dataset\\norm2.png", imageNorm2, w, h, LCT_GREY, 8);
-
-
     // Cross checking
     start = clock();
-    crossCheck(imageNorm1, imageNorm2, &imageCross, w, h, THRESHOLD);
+    crossCheck(imageZNCC1, imageZNCC2, &imageCross, w, h, THRESHOLD);
     end = clock();
     timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("Cross check: %.3f s\n", timeElapsed);
-    lodepng_encode_file("dataset\\cross.png", imageCross, w, h, LCT_GREY, 8);
 
     // Occlusion fill
     start = clock();
-    occlusionFill(imageCross, &imageOut, w, h);
+    occlusionFill(imageCross, &imageOcc, w, h);
     end = clock();
     timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("Occlusion fill: %.3f s\n", timeElapsed);
 
+    // Normalize image
+    start = clock();
+    normalizeImage(imageOcc, &imageOut, w, h);
+    end = clock();
+    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Normalization: %.3f s\n", timeElapsed);
 
     // Save image
     start = clock();
-    sprintf(file3, "dataset\\depthmap_%d_%d.png", WIN_SIZE, THRESHOLD);
     writeImage(file3, imageOut, w, h);
     end = clock();
     timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
@@ -302,9 +295,8 @@ int main(void) {
     free(imageGray2);
     free(imageZNCC1);
     free(imageZNCC2);
-    free(imageNorm1);
-    free(imageNorm2);
     free(imageCross);
+    free(imageOcc);
     free(imageOut);
 
     return 0;
