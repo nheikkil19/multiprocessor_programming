@@ -1,0 +1,62 @@
+{
+  "C_Cpp_Runner.cCompilerPath": "C:/w64devkit/bin/gcc.exe",
+  "C_Cpp_Runner.cppCompilerPath": "C:/w64devkit/bin/g++.exe",
+  "C_Cpp_Runner.debuggerPath": "C:/w64devkit/bin/gdb.exe",
+  "C_Cpp_Runner.cStandard": "gnu17",
+  "C_Cpp_Runner.cppStandard": "gnu++17",
+  "C_Cpp_Runner.msvcBatchPath": "",
+  "C_Cpp_Runner.useMsvc": false,
+  "C_Cpp_Runner.warnings": [
+    "-Wall",
+    "-Wextra",
+    "-Wpedantic",
+    "-Wshadow",
+    "-Wformat=2",
+    "-Wconversion",
+    "-Wnull-dereference",
+    "-Wsign-conversion"
+  ],
+  "C_Cpp_Runner.enableWarnings": true,
+  "C_Cpp_Runner.warningsAsError": false,
+  "C_Cpp_Runner.compilerArgs": [],
+  "C_Cpp_Runner.linkerArgs": [],
+  "C_Cpp_Runner.includePaths": [
+    "${workspaceFolder}/**",
+    "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.0/lib/x64",
+    "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.0/include"
+  ],
+  "C_Cpp_Runner.includeSearch": [
+    "*",
+    "**/*"
+  ],
+  "C_Cpp_Runner.excludeSearch": [
+    "**/build",
+    "**/build/**",
+    "**/.*",
+    "**/.*/**",
+    "**/.vscode",
+    "**/.vscode/**"
+  ],
+  "C_Cpp_Runner.useAddressSanitizer": false,
+  "files.associations": {
+    "opencl.h": "c",
+    "__bit_reference": "c",
+    "algorithm": "c",
+    "bitset": "c",
+    "chrono": "c",
+    "unordered_map": "c",
+    "array": "c",
+    "iterator": "c",
+    "string": "c",
+    "string_view": "c",
+    "vector": "c",
+    "typeinfo": "c",
+    "__hash_table": "c",
+    "deque": "c",
+    "memory": "c",
+    "random": "c",
+    "__locale": "c",
+    "__mutex_base": "c",
+    "mutex": "c"
+  }
+}
