@@ -537,7 +537,6 @@ int main(void) {
 
     imageOut = (unsigned char *) malloc(sizeof(unsigned char) * h * w);
     clEnqueueReadImage(commands, imageGrayGPU1, CL_TRUE, origin, region, 0, 0, imageOut, 0, NULL, NULL);
-    // clEnqueueReadBuffer(commands, imageGrayGPU1, CL_TRUE, 0, sizeof(unsigned char) * h * w * 4, imageOut, 0, NULL, NULL );
 
     // Save image
     start = clock();
