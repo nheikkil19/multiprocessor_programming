@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "lodepng.h"
+#include "../lodepng.h"
 #include <CL/cl.h>
 
 #define W (100)

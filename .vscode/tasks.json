@@ -15,7 +15,7 @@
                 "-lOpenCL",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe",
-                "lodepng.o",
+                "${workspaceFolder}\\lodepng.o",
                 "-Wall",
                 "-fopenmp"
             ],

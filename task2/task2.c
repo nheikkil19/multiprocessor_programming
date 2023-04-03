@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "lodepng.h"
+#include "../lodepng.h"
 #include <math.h>
 #include <time.h>
 
@@ -215,9 +215,9 @@ int main(void) {
     unsigned const MAX_DISP = 260/4;
     unsigned const WIN_SIZE = 9;
     unsigned const THRESHOLD = 8;
-    char file1[] = "dataset\\im0.png";
-    char file2[] = "dataset\\im1.png";
-    char file3[] = "dataset\\depthmap.png";
+    char file1[] = "..\\dataset\\im0.png";
+    char file2[] = "..\\dataset\\im1.png";
+    char file3[] = "..\\dataset\\depthmap.png";
     unsigned char *image1, *image2, *imageDs1, *imageDs2, *imageGray1, *imageGray2, *imageZNCC1, *imageZNCC2, *imageCross, *imageOcc, *imageOut;
     unsigned w, h, scaleFactor;
     clock_t start, end;

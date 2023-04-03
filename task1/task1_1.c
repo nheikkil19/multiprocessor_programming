@@ -1,4 +1,4 @@
-#include "lodepng.h"
+#include "../lodepng.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -10,8 +10,8 @@ int main(void) {
     unsigned char * image = 0;
     unsigned w, h;
     unsigned err;
-    char filenameIn[] = "dataset\\im0.png";
-    char filenameOut[] = "dataset\\im0_gray.png";
+    char filenameIn[] = "..\\dataset\\im0.png";
+    char filenameOut[] = "..\\dataset\\im0_gray.png";
 
 
     err = lodepng_decode32_file(&image, &w, &h, filenameIn);

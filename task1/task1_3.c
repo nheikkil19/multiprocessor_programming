@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "lodepng.h"
+#include "../lodepng.h"
 #include <CL/cl.h>
 
 int convertGrayscale(unsigned char *image, unsigned w, unsigned h, unsigned p, cl_mem *imageOut, cl_device_id device_id, cl_context context, cl_command_queue commands);
@@ -16,8 +16,8 @@ int main(void) {
     unsigned char *image;
     unsigned w, h, p = 4;
     unsigned err;
-    char filenameIn[] = "dataset\\im0.png";
-    char filenameOut[] = "dataset\\im0_gray.png";
+    char filenameIn[] = "..\\dataset\\im0.png";
+    char filenameOut[] = "..\\dataset\\im0_gray.png";
 
     cl_uint num_platforms;
     cl_uint num_devices;
