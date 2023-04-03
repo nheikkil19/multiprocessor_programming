@@ -368,6 +368,30 @@ void occlusionFill(unsigned char *imageIn, unsigned char **imageOut, unsigned w,
     }
 }
 
+int moveToGPU(unsigned char *imageIn, cl_mem *imageOut, unsigned w, unsigned h, 
+    cl_context context, cl_command_queue commands
+) {
+    cl_image_format imageFormat;
+    int err;
+
+    // Set image format
+    imageFormat.image_channel_order = CL_RGBA;
+    imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
+
+    // Allocate memory on GPU
+    *imageOut = clCreateImage2D(context, CL_MEM_READ_WRITE, &imageFormat, w, h, 0, NULL, &err);
+
+    // Move images to GPU
+    size_t origin[] = {0, 0, 0};
+    size_t region[] = {w, h, 1};
+    err  = clEnqueueWriteImage(commands, *imageOut, CL_TRUE, origin, region, 0, 0, imageIn, 0, NULL, NULL);
+    if (err != CL_SUCCESS) {
+        printf("Error: Failed to write image to GPU memory!\n");
+        return 1;
+    }
+    return 0;
+
+}
 
 
 int main(void) {
@@ -389,7 +413,7 @@ int main(void) {
 
 
     // Read images
-    // start = clock();
+    start = clock();
     #pragma omp parallel sections
     {
         #pragma omp section 
@@ -397,9 +421,9 @@ int main(void) {
         #pragma omp section
         readImage(file2, &image2, &w, &h);
     }
-    // end = clock();
-    // timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    // printf("Read files: %.3f s\n", timeElapsed);
+    end = clock();
+    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Read files: %.3f s\n", timeElapsed);
 
     // OpenCL variables
     cl_uint num_platforms;
@@ -440,31 +464,17 @@ int main(void) {
         return 1;
     }
  
-    cl_image_format imageFormat;
-    imageFormat.image_channel_order = CL_RGBA;
-    imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
-    // Allocate memory on GPU
-    image1GPU = clCreateImage2D(context, CL_MEM_READ_WRITE, &imageFormat, w, h, 0, NULL, &err);
-    image2GPU = clCreateImage2D(context, CL_MEM_READ_WRITE, &imageFormat, w, h, 0, NULL, &err);
-    // imageDs1GPU = clCreateImage2D(context, CL_MEM_READ_WRITE, &imageFormat, w/scaleFactor, h/scaleFactor, 0, NULL, &err);
-    // imageDs2GPU = clCreateImage2D(context, CL_MEM_READ_WRITE, &imageFormat, w/scaleFactor, h/scaleFactor, 0, NULL, &err);
-    // imageOutGPU = clCreateImage2D(context, CL_MEM_WRITE_ONLY, &imageFormat, w/scaleFactor, h/scaleFactor, 0, NULL, &err);
-
-    // image2GPU = clCreateBuffer(context,  CL_MEM_READ_ONLY,  sizeof(unsigned char) * h * w * subpixels, NULL, NULL);
-    // imageDs1GPU = clCreateBuffer(context,  CL_MEM_READ_WRITE,  sizeof(unsigned char) * h/scaleFactor * w/scaleFactor, NULL, NULL);
-    // imageDs2GPU = clCreateBuffer(context,  CL_MEM_READ_WRITE,  sizeof(unsigned char) * h/scaleFactor * w/scaleFactor, NULL, NULL);
-    // imageOutGPU = clCreateBuffer(context,  CL_MEM_WRITE_ONLY,  sizeof(unsigned char) * h/scaleFactor * w/scaleFactor * 4 , NULL, NULL);
-
     // Move images to GPU
-    size_t origin[] = {0, 0, 0};
-    size_t region[] = {w, h, 1};
-    err  = clEnqueueWriteImage(commands, image1GPU, CL_TRUE, origin, region, 0, 0, image1, 0, NULL, NULL);
-    err |= clEnqueueWriteImage(commands, image2GPU, CL_TRUE, origin, region, 0, 0, image2, 0, NULL, NULL);
-    if (err != CL_SUCCESS) {
-        printf("Error: Failed to move images to the device!\n");
+    start = clock();
+    err  = moveToGPU(image1, &image1GPU, w, h, context, commands);
+    err |= moveToGPU(image2, &image2GPU, w, h, context, commands);
+    if (err) {
+        printf("Error: Failed to move image to the device!\n");
         return 1;
     }
-
+    end = clock();
+    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Move to GPU: %.3f s\n", timeElapsed);
 
     // Downscale by four
     start = clock();
@@ -522,9 +532,9 @@ int main(void) {
     // printf("Normalization: %.3f s\n", timeElapsed);
 
 
-    region[0] = w;
-    region[1] = h;
-    region[2] = 1;
+    size_t region[3] = {w, h, 1};
+    size_t origin[3] = {0, 0, 0};
+
     imageOut = (unsigned char *) malloc(sizeof(unsigned char) * h * w);
     clEnqueueReadImage(commands, imageGrayGPU1, CL_TRUE, origin, region, 0, 0, imageOut, 0, NULL, NULL);
     // clEnqueueReadBuffer(commands, imageGrayGPU1, CL_TRUE, 0, sizeof(unsigned char) * h * w * 4, imageOut, 0, NULL, NULL );
