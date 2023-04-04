@@ -9,8 +9,9 @@ __kernel void downscaleImage(
     unsigned hOut, wOut;
     hOut = h / factor;
     wOut = w / factor;
+    unsigned i = get_global_id(0);
 
-    for (int i=0; i<hOut; i++) {
+    // for (int i=0; i<hOut; i++) {
         for (int j=0; j<wOut; j++) {
             for (int k=0; k<subpixels; k++) {
                 uint4 pixel = read_imageui(imageIn, (int2)(j*factor, i*factor));
@@ -18,5 +19,5 @@ __kernel void downscaleImage(
                 // imageOut[i*wOut*subpixels + j*subpixels + k] = imageIn[i*factor*w*subpixels + j*factor*subpixels + k];
             }
         }
-    }
+    // }
 }

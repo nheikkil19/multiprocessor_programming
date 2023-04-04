@@ -5,8 +5,7 @@ int downscaleImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     cl_context context, cl_device_id device_id, cl_command_queue commands
 ) {
     int err = 0;
-    size_t global = 1024;               // global domain size for our calculation
-    size_t local = 64;                  // local domain size for our calculation
+    size_t global = h/factor;               // global domain size for our calculation
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_image_format imageFormat;        // image format
@@ -67,7 +66,7 @@ int downscaleImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
         printf("Error: Failed to set kernel arguments! %d\n", err);
         return 1;
     }
-    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, NULL, 0, NULL, NULL);
     if (err) {
         printf("Error: Failed to execute kernel!\n");
         return 1;
@@ -84,8 +83,7 @@ int grayscaleImage(cl_mem imageIn, cl_mem *imageOut,
     cl_context context, cl_device_id device_id, cl_command_queue commands
 ) {
     int err = 0;
-    size_t global = 1024;               // global domain size for our calculation
-    size_t local = 64;                  // local domain size for our calculation
+    size_t global = h;               // global domain size for our calculation
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_image_format imageFormat;
@@ -143,7 +141,7 @@ int grayscaleImage(cl_mem imageIn, cl_mem *imageOut,
         printf("Error: Failed to set kernel arguments! %d\n", err);
         return 1;
     }
-    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, NULL, 0, NULL, NULL);
     if (err) {
         printf("Error: Failed to execute kernel!\n");
         return 1;
