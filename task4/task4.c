@@ -49,7 +49,8 @@ int main(void) {
     cl_context context;                 // compute context
     cl_command_queue commands;          // compute command queue
 
-    cl_mem image1GPU, image2GPU, imageDs1GPU, imageDs2GPU, imageGray1GPU, imageGray2GPU, imageOutGPU;
+    cl_mem image1GPU, image2GPU, imageDs1GPU, imageDs2GPU, imageGray1GPU, imageGray2GPU, 
+        imageZNCC1GPU, imageZNCC2GPU, imageCrossGPU, imageOccGPU, imageOutGPU;
 
     // Prepare OpenCL
     err = clGetPlatformIDs(0, NULL, &num_platforms);
@@ -119,32 +120,48 @@ int main(void) {
 
     // Do ZNCC
     start = clock();
-    err = calcZNCC(imageGray1GPU, imageGray2GPU, &imageOutGPU, wDs, hDs, MAX_DISP, WIN_SIZE, 1, context, device_id, commands);
-
+    err = calcZNCC(imageGray1GPU, imageGray2GPU, &imageZNCC1GPU, wDs, hDs, MAX_DISP, WIN_SIZE, 1, context, device_id, commands);
+    err = calcZNCC(imageGray2GPU, imageGray1GPU, &imageZNCC2GPU, wDs, hDs, MAX_DISP, WIN_SIZE, 1, context, device_id, commands);
+    if (err) {
+        printf("Error: Failed to calculate ZNCC!\n");
+        return 1;
+    }
     end = clock();
     timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("ZNCC: %.3f s\n", timeElapsed);
 
     // Cross checking
-    // start = clock();
-
-    // end = clock();
-    // timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    // printf("Cross check: %.3f s\n", timeElapsed);
+    start = clock();
+    err = crossCheck(imageZNCC1GPU, imageZNCC2GPU, &imageCrossGPU, wDs, hDs, THRESHOLD, context, device_id, commands);
+    if (err) {
+        printf("Error: Failed to perform cross checking!\n");
+        return 1;
+    }
+    end = clock();
+    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Cross check: %.3f s\n", timeElapsed);
 
     // Occlusion fill
-    // start = clock();
-
-    // end = clock();
-    // timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    // printf("Occlusion fill: %.3f s\n", timeElapsed);
+    start = clock();
+    err = occlusionFill(imageCrossGPU, &imageOccGPU, wDs, hDs, context, device_id, commands);
+    if (err) {
+        printf("Error: Failed to perform occlusion fill!\n");
+        return 1;
+    }
+    end = clock();
+    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Occlusion fill: %.3f s\n", timeElapsed);
 
     // Normalize image
-    // start = clock();
-
-    // end = clock();
-    // timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    // printf("Normalization: %.3f s\n", timeElapsed);
+    start = clock();
+    err = normalizeImage(imageOccGPU, &imageOutGPU, wDs, hDs, context, device_id, commands);
+    if (err) {
+        printf("Error: Failed to normalize image!\n");
+        return 1;
+    }
+    end = clock();
+    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Normalization: %.3f s\n", timeElapsed);
 
 
     size_t region[3] = {wDs, hDs, 1};
@@ -174,6 +191,8 @@ int main(void) {
     clReleaseMemObject(imageDs2GPU);
     clReleaseMemObject(imageGray1GPU);
     clReleaseMemObject(imageGray2GPU);
+    clReleaseMemObject(imageZNCC1GPU);
+    clReleaseMemObject(imageZNCC2GPU);
 
     clReleaseMemObject(imageOutGPU);
 
