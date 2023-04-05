@@ -11,7 +11,7 @@ void readImage(char *filename, unsigned char **imageOut, unsigned *w, unsigned *
     }
 }
 
-int readTextFile(char *filename, char *content, unsigned max_size) {
+int readTextFile(char *filename, char *content, unsigned maxSize) {
     FILE *file;
     file = fopen(filename, "r");
     char c;
@@ -20,7 +20,7 @@ int readTextFile(char *filename, char *content, unsigned max_size) {
     }
     else {
         int i = 0;
-        while ((c = fgetc(file)) != EOF && i < max_size-1) {
+        while ((c = fgetc(file)) != EOF && i < maxSize-1) {
             content[i] = c;
             i++;
         }
@@ -97,4 +97,50 @@ int moveFromGPU(cl_mem imageIn, unsigned char **imageOut, unsigned w, unsigned h
         return 1;
     }
     return 0;
+}
+
+void printDeviceInfo(cl_device_id deviceId) {
+    cl_device_local_mem_type localMemType;
+    cl_ulong localMemSize;
+    cl_uint maxComputeUnits;
+    cl_uint maxClockFrequency;
+    cl_ulong maxConstantBufferSize;
+    size_t maxWorkGroupSize;
+    unsigned maxWorkItemDimensions;
+
+    clGetDeviceInfo(deviceId, CL_DEVICE_LOCAL_MEM_TYPE, sizeof(localMemType), &localMemType, NULL);
+    clGetDeviceInfo(deviceId, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(localMemSize), &localMemSize, NULL);
+    clGetDeviceInfo(deviceId, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(maxComputeUnits), &maxComputeUnits, NULL);
+    clGetDeviceInfo(deviceId, CL_DEVICE_MAX_CLOCK_FREQUENCY, sizeof(maxClockFrequency), &maxClockFrequency, NULL);
+    clGetDeviceInfo(deviceId, CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, sizeof(maxConstantBufferSize), &maxConstantBufferSize, NULL);
+    clGetDeviceInfo(deviceId, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(maxWorkGroupSize), &maxWorkGroupSize, NULL);
+    clGetDeviceInfo(deviceId, CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(maxWorkItemDimensions), &maxWorkItemDimensions, NULL);
+
+    size_t maxWorkItemSizes[maxWorkItemDimensions];
+    clGetDeviceInfo(deviceId, CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(maxWorkItemSizes), maxWorkItemSizes, NULL);
+
+
+    printf("Local memory type: ");
+    if (localMemType == CL_LOCAL) {
+        printf("Local\n");
+    }
+    else if (localMemType == CL_GLOBAL) {
+        printf("Global\n");
+    }
+    else {
+        printf("Not supported\n");
+    }
+
+    printf("Local memory size: %llu B\n", localMemSize);
+    printf("Max compute units: %d\n", maxComputeUnits);
+    printf("Max clock frequency: %d MHz\n", maxClockFrequency);
+    printf("Max constant buffer size: %llu B\n", maxConstantBufferSize);
+    printf("Max work group size: %llu \n", maxWorkGroupSize);
+    printf("Nax work item dimensions: %d \n", maxWorkItemDimensions);
+    printf("Max work item sizes: (");
+    for (int i = 0; i < maxWorkItemDimensions-1; i++) {
+        printf("%llu, ", maxWorkItemSizes[i]);
+    }
+    printf("%llu) \n", maxWorkItemSizes[maxWorkItemDimensions-1]);
+
 }

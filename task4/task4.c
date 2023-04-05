@@ -79,7 +79,7 @@ int main(void) {
         printf("Error: Failed to create a command commands!\n");
         return 1;
     }
- 
+
     // Move images to GPU
     start = clock();
     err  = moveToGPU(image1, &image1GPU, w, h, context, commands);
@@ -199,6 +199,10 @@ int main(void) {
     clReleaseMemObject(imageCrossGPU);
     clReleaseMemObject(imageOccGPU);
     clReleaseMemObject(imageOutGPU);
+
+    // Print device info
+    printf("\n");
+    printDeviceInfo(device_id);
 
     return 0;
 }
