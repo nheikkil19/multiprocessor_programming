@@ -9,13 +9,26 @@ int calcZNCC(cl_mem imageL, cl_mem imageR, cl_mem *imageOut,
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_image_format imageFormat;        // image format
+    cl_image_desc imageDesc;            // image descriptor
 
     // Set image format
     imageFormat.image_channel_order = CL_A;
     imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
 
+    // Set image descriptor
+    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    imageDesc.image_width = w;
+    imageDesc.image_height = h;
+    imageDesc.image_depth = 0;
+    imageDesc.image_array_size = 1;
+    imageDesc.image_row_pitch = 0;
+    imageDesc.image_slice_pitch = 0;
+    imageDesc.num_mip_levels = 0;
+    imageDesc.num_samples = 0;
+    imageDesc.buffer = NULL;
+
     // Allocate memory on GPU
-    *imageOut = clCreateImage2D(context, CL_MEM_READ_WRITE, &imageFormat, w, h, 0, NULL, &err);
+    *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
 
     // Read the kernel code from file
     char *programSource;
@@ -87,13 +100,26 @@ int normalizeImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_image_format imageFormat;        // image format
+    cl_image_desc imageDesc;            // image descriptor
 
     // Set image format
     imageFormat.image_channel_order = CL_A;
     imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
 
+    // Set image descriptor
+    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    imageDesc.image_width = w;
+    imageDesc.image_height = h;
+    imageDesc.image_depth = 0;
+    imageDesc.image_array_size = 1;
+    imageDesc.image_row_pitch = 0;
+    imageDesc.image_slice_pitch = 0;
+    imageDesc.num_mip_levels = 0;
+    imageDesc.num_samples = 0;
+    imageDesc.buffer = NULL;
+
     // Allocate memory on GPU
-    *imageOut = clCreateImage2D(context, CL_MEM_READ_WRITE, &imageFormat, w, h, 0, NULL, &err);
+    *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
 
     // Read the kernel code from file
     char *programSource;
@@ -161,13 +187,26 @@ int crossCheck(cl_mem image1, cl_mem image2, cl_mem *imageOut,
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_image_format imageFormat;        // image format
+    cl_image_desc imageDesc;            // image descriptor
 
     // Set image format
     imageFormat.image_channel_order = CL_A;
     imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
 
+    // Set image descriptor
+    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    imageDesc.image_width = w;
+    imageDesc.image_height = h;
+    imageDesc.image_depth = 0;
+    imageDesc.image_array_size = 1;
+    imageDesc.image_row_pitch = 0;
+    imageDesc.image_slice_pitch = 0;
+    imageDesc.num_mip_levels = 0;
+    imageDesc.num_samples = 0;
+    imageDesc.buffer = NULL;
+
     // Allocate memory on GPU
-    *imageOut = clCreateImage2D(context, CL_MEM_READ_WRITE, &imageFormat, w, h, 0, NULL, &err);
+    *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
 
     // Read the kernel code from file
     char *programSource;
@@ -235,13 +274,26 @@ int occlusionFill(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_image_format imageFormat;        // image format
+    cl_image_desc imageDesc;            // image descriptor
 
     // Set image format
     imageFormat.image_channel_order = CL_A;
     imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
 
+    // Set image descriptor
+    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    imageDesc.image_width = w;
+    imageDesc.image_height = h;
+    imageDesc.image_depth = 0;
+    imageDesc.image_array_size = 1;
+    imageDesc.image_row_pitch = 0;
+    imageDesc.image_slice_pitch = 0;
+    imageDesc.num_mip_levels = 0;
+    imageDesc.num_samples = 0;
+    imageDesc.buffer = NULL;
+
     // Allocate memory on GPU
-    *imageOut = clCreateImage2D(context, CL_MEM_READ_WRITE, &imageFormat, w, h, 0, NULL, &err);
+    *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
 
     // Read the kernel code from file
     char *programSource;

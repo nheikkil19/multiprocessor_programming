@@ -9,13 +9,26 @@ int downscaleImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_image_format imageFormat;        // image format
+    cl_image_desc imageDesc;            // image descriptor
 
     // Set output image format
     imageFormat.image_channel_order = CL_RGBA;
     imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
 
+    // Set image descriptor
+    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    imageDesc.image_width = w/factor;
+    imageDesc.image_height = h/factor;
+    imageDesc.image_depth = 0;
+    imageDesc.image_array_size = 1;
+    imageDesc.image_row_pitch = 0;
+    imageDesc.image_slice_pitch = 0;
+    imageDesc.num_mip_levels = 0;
+    imageDesc.num_samples = 0;
+    imageDesc.buffer = NULL;
+
     // Allocate memory on GPU
-    *imageOut = clCreateImage2D(context, CL_MEM_READ_WRITE, &imageFormat, w/factor, h/factor, 0, NULL, &err);
+    *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to create image on device!\n");
         return 1;
@@ -87,13 +100,26 @@ int grayscaleImage(cl_mem imageIn, cl_mem *imageOut,
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_image_format imageFormat;
+    cl_image_desc imageDesc;
 
     // Set output image format
     imageFormat.image_channel_order = CL_R;
     imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
 
-    // Create image buffer in device memory
-    *imageOut = clCreateImage2D(context, CL_MEM_READ_WRITE, &imageFormat, w, h, 0, NULL, &err);
+    // Set image descriptor
+    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    imageDesc.image_width = w;
+    imageDesc.image_height = h;
+    imageDesc.image_depth = 0;
+    imageDesc.image_array_size = 1;
+    imageDesc.image_row_pitch = 0;
+    imageDesc.image_slice_pitch = 0;
+    imageDesc.num_mip_levels = 0;
+    imageDesc.num_samples = 0;
+    imageDesc.buffer = NULL;
+
+    // Allocate memory on GPU
+    *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to create image on device!\n");
         return 1;

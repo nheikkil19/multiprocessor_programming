@@ -46,14 +46,27 @@ int moveToGPU(unsigned char *imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     cl_context context, cl_command_queue commands
 ) {
     cl_image_format imageFormat;
+    cl_image_desc imageDesc;
     int err;
 
     // Set image format
     imageFormat.image_channel_order = CL_RGBA;
     imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
 
+    // Set image descriptor
+    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    imageDesc.image_width = w;
+    imageDesc.image_height = h;
+    imageDesc.image_depth = 0;
+    imageDesc.image_array_size = 1;
+    imageDesc.image_row_pitch = 0;
+    imageDesc.image_slice_pitch = 0;
+    imageDesc.num_mip_levels = 0;
+    imageDesc.num_samples = 0;
+    imageDesc.buffer = NULL;
+
     // Allocate memory on GPU
-    *imageOut = clCreateImage2D(context, CL_MEM_READ_WRITE, &imageFormat, w, h, 0, NULL, &err);
+    *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
 
     // Move images to GPU
     size_t origin[] = {0, 0, 0};
@@ -70,14 +83,9 @@ int moveToGPU(unsigned char *imageIn, cl_mem *imageOut, unsigned w, unsigned h,
 int moveFromGPU(cl_mem imageIn, unsigned char **imageOut, unsigned w, unsigned h, 
     cl_command_queue commands
 ) {
-    cl_image_format imageFormat;
     int err;
 
-    // Set image format
-    imageFormat.image_channel_order = CL_A;
-    imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
-
-    // Allocate memory on CPU
+    // Allocate memory on host
     *imageOut = (unsigned char *) malloc(w * h * sizeof(unsigned char));
 
     // Move images from GPU
