@@ -121,7 +121,7 @@ int main(void) {
     // Do ZNCC
     start = clock();
     err = calcZNCC(imageGray1GPU, imageGray2GPU, &imageZNCC1GPU, wDs, hDs, MAX_DISP, WIN_SIZE, 1, context, device_id, commands);
-    err = calcZNCC(imageGray2GPU, imageGray1GPU, &imageZNCC2GPU, wDs, hDs, MAX_DISP, WIN_SIZE, 1, context, device_id, commands);
+    err = calcZNCC(imageGray2GPU, imageGray1GPU, &imageZNCC2GPU, wDs, hDs, MAX_DISP, WIN_SIZE, -1, context, device_id, commands);
     if (err) {
         printf("Error: Failed to calculate ZNCC!\n");
         return 1;
@@ -170,7 +170,6 @@ int main(void) {
     imageOut = (unsigned char *) malloc(sizeof(unsigned char) * hDs * wDs);
     clEnqueueReadImage(commands, imageOutGPU, CL_TRUE, origin, region, 0, 0, imageOut, 0, NULL, NULL);
 
-    clFinish(commands);
     // Save image
     start = clock();
     writeImage(file3, imageOut, wDs, hDs);

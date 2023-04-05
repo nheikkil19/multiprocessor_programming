@@ -83,6 +83,7 @@ int normalizeImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
 ) {
     int err = 0;
     size_t global = h;                  // global domain size for our calculation
+    size_t local = h;
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_image_format imageFormat;        // image format
@@ -138,7 +139,7 @@ int normalizeImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
         return 1;
     }
 
-    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, NULL, 0, NULL, NULL);
+    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, &local, 0, NULL, NULL);
     if (err) {
         printf("Error: Failed to execute kernel! Error number = %d\n", err);
         return 1;
