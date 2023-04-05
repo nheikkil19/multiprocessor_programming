@@ -110,9 +110,11 @@ void calcZNCC(unsigned char *imageL, unsigned char *imageR, unsigned char **imag
                             x = i + win_x - win_size/2;
                             // Do not go outside the image
                             if ( x >= 0 && x-(d*inv) >= 0 && x < w && x-(d*inv) < w ) {
-                                zncc1 += ((double)imageL[y*w + x] - imgAvgL) * ((double)imageR[y*w + x-(d*inv)] - imgAvgR);
-                                zncc2 += pow((double)imageL[y*w + x] - imgAvgL, 2);
-                                zncc3 += pow((double)imageR[y*w + x-(d*inv)] - imgAvgR, 2);
+                                int left = imageL[y*w + x];
+                                int right = imageR[y*w + x-(d*inv)];
+                                zncc1 += (left - imgAvgL) * (right - imgAvgR);
+                                zncc2 += (left - imgAvgL) * (left - imgAvgL);
+                                zncc3 += (right - imgAvgR) * (right - imgAvgR);
                             }
                         }
                     }
@@ -148,8 +150,8 @@ void normalizeImage(unsigned char *imageIn, unsigned char **imageOut, unsigned w
     #pragma omp parallel for
     for (int i=0; i<w*h; i++) {
         (*imageOut)[i] = (imageIn[i] - min) * 255 / (max - min);
+        }
     }
-}
 
 
 void crossCheck(unsigned char *image1, unsigned char *image2, unsigned char **imageOut, unsigned w, unsigned h, unsigned threshold) {
@@ -157,17 +159,15 @@ void crossCheck(unsigned char *image1, unsigned char *image2, unsigned char **im
 
     #pragma omp parallel for
     for (int i=0; i<h; i++) {
-        int x, y, d;
+        int d;
         for (int j=0; j<w; j++) {
-            y = i * w;
-            x = j;
-            d = image1[y + x];
+            d = image1[i*w + j];
 
-            if ( y + x - d >= 0 && abs((char)image1[y + x] - (char)image2[y + (x-d)]) > threshold) {
-                (*imageOut)[y + x] = 0;
+            if ( (int)(i*w + j-d) >= 0 && (int)abs((char)d - (char)image2[i*w + j-d]) > threshold) {
+                (*imageOut)[i*w + j] = 0;
             }
             else {
-                (*imageOut)[y + x] = image1[y + x];
+                (*imageOut)[i*w + j] = (unsigned)d;
             }
         }
     }
