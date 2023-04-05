@@ -163,12 +163,16 @@ int main(void) {
     timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("Normalization: %.3f s\n", timeElapsed);
 
-
-    size_t region[3] = {wDs, hDs, 1};
-    size_t origin[3] = {0, 0, 0};
-
-    imageOut = (unsigned char *) malloc(sizeof(unsigned char) * hDs * wDs);
-    clEnqueueReadImage(commands, imageOutGPU, CL_TRUE, origin, region, 0, 0, imageOut, 0, NULL, NULL);
+    // Move image back from GPU
+    start = clock();
+    err = moveFromGPU(imageOutGPU, &imageOut, wDs, hDs, commands);
+    if (err) {
+        printf("Error: Failed to move image from the device!\n");
+        return 1;
+    }
+    end = clock();
+    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Move from GPU: %.3f s\n", timeElapsed);
 
     // Save image
     start = clock();
@@ -192,7 +196,8 @@ int main(void) {
     clReleaseMemObject(imageGray2GPU);
     clReleaseMemObject(imageZNCC1GPU);
     clReleaseMemObject(imageZNCC2GPU);
-
+    clReleaseMemObject(imageCrossGPU);
+    clReleaseMemObject(imageOccGPU);
     clReleaseMemObject(imageOutGPU);
 
     return 0;

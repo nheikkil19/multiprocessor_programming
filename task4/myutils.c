@@ -66,3 +66,27 @@ int moveToGPU(unsigned char *imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     return 0;
 
 }
+
+int moveFromGPU(cl_mem imageIn, unsigned char **imageOut, unsigned w, unsigned h, 
+    cl_command_queue commands
+) {
+    cl_image_format imageFormat;
+    int err;
+
+    // Set image format
+    imageFormat.image_channel_order = CL_A;
+    imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
+
+    // Allocate memory on CPU
+    *imageOut = (unsigned char *) malloc(w * h * sizeof(unsigned char));
+
+    // Move images from GPU
+    size_t origin[] = {0, 0, 0};
+    size_t region[] = {w, h, 1};
+    err  = clEnqueueReadImage(commands, imageIn, CL_TRUE, origin, region, 0, 0, *imageOut, 0, NULL, NULL);
+    if (err != CL_SUCCESS) {
+        printf("Error: Failed to read image from GPU memory!\n");
+        return 1;
+    }
+    return 0;
+}
