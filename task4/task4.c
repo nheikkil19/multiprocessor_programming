@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../lodepng.h"
-#include <math.h>
-#include <time.h>
 #include <omp.h>
 #include <CL/cl.h>
 #include "myutils.c"
@@ -22,13 +20,13 @@ int main(void) {
     unsigned w, h, wDs, hDs;
     unsigned subpixels = 4;
     unsigned scaleFactor = 4;
-    clock_t start, end;
+    double start, end;
     double timeElapsed;
     int err;
 
 
     // Read images
-    start = clock();
+    start = getTime();
     #pragma omp parallel sections
     {
         #pragma omp section 
@@ -36,9 +34,9 @@ int main(void) {
         #pragma omp section
         readImage(file2, &image2, &w, &h);
     }
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Read files: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Read files: %f s\n", timeElapsed);
 
     // OpenCL variables
     cl_uint num_platforms;
@@ -81,19 +79,19 @@ int main(void) {
     }
 
     // Move images to GPU
-    start = clock();
+    start = getTime();
     err  = moveToGPU(image1, &image1GPU, w, h, context, commands);
     err |= moveToGPU(image2, &image2GPU, w, h, context, commands);
     if (err) {
         printf("Error: Failed to move image to the device!\n");
         return 1;
     }
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Move to GPU: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Move to GPU: %f s\n", timeElapsed);
 
     // Downscale by four
-    start = clock();
+    start = getTime();
     err  = downscaleImage(image1GPU, &imageDs1GPU, w, h, subpixels, scaleFactor, context, device_id, commands);
     err |= downscaleImage(image2GPU, &imageDs2GPU, w, h, subpixels, scaleFactor, context, device_id, commands);
     if (err) {
@@ -102,84 +100,84 @@ int main(void) {
     }
     wDs = w / scaleFactor;
     hDs = h / scaleFactor;
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Downscale: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Downscale: %f s\n", timeElapsed);
 
     // Convert to grayscale
-    start = clock();
+    start = getTime();
     err  = grayscaleImage(imageDs1GPU, &imageGray1GPU, wDs, hDs, subpixels, context, device_id, commands);
     err |= grayscaleImage(imageDs2GPU, &imageGray2GPU, wDs, hDs, subpixels,  context, device_id, commands);
     if (err) {
         printf("Error: Failed to convert to grayscale!\n");
         return 1;
     }
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Grayscale: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Grayscale: %f s\n", timeElapsed);
 
     // Do ZNCC
-    start = clock();
+    start = getTime();
     err = calcZNCC(imageGray1GPU, imageGray2GPU, &imageZNCC1GPU, wDs, hDs, MAX_DISP, WIN_SIZE, 1, context, device_id, commands);
     err = calcZNCC(imageGray2GPU, imageGray1GPU, &imageZNCC2GPU, wDs, hDs, MAX_DISP, WIN_SIZE, -1, context, device_id, commands);
     if (err) {
         printf("Error: Failed to calculate ZNCC!\n");
         return 1;
     }
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("ZNCC: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("ZNCC: %f s\n", timeElapsed);
 
     // Cross checking
-    start = clock();
+    start = getTime();
     err = crossCheck(imageZNCC1GPU, imageZNCC2GPU, &imageCrossGPU, wDs, hDs, THRESHOLD, context, device_id, commands);
     if (err) {
         printf("Error: Failed to perform cross checking!\n");
         return 1;
     }
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Cross check: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Cross check: %f s\n", timeElapsed);
 
     // Occlusion fill
-    start = clock();
+    start = getTime();
     err = occlusionFill(imageCrossGPU, &imageOccGPU, wDs, hDs, context, device_id, commands);
     if (err) {
         printf("Error: Failed to perform occlusion fill!\n");
         return 1;
     }
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Occlusion fill: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Occlusion fill: %f s\n", timeElapsed);
 
     // Normalize image
-    start = clock();
+    start = getTime();
     err = normalizeImage(imageOccGPU, &imageOutGPU, wDs, hDs, context, device_id, commands);
     if (err) {
         printf("Error: Failed to normalize image!\n");
         return 1;
     }
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Normalization: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Normalization: %f s\n", timeElapsed);
 
     // Move image back from GPU
-    start = clock();
+    start = getTime();
     err = moveFromGPU(imageOutGPU, &imageOut, wDs, hDs, commands);
     if (err) {
         printf("Error: Failed to move image from the device!\n");
         return 1;
     }
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Move from GPU: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Move from GPU: %f s\n", timeElapsed);
 
     // Save image
-    start = clock();
+    start = getTime();
     writeImage(file3, imageOut, wDs, hDs);
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Save file: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Save file: %f s\n", timeElapsed);
 
 
     // Free memory

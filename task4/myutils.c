@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "../lodepng.h"
 #include <CL/cl.h>
+#include <profileapi.h>
 
 
 void readImage(char *filename, unsigned char **imageOut, unsigned *w, unsigned *h) {
@@ -143,4 +144,19 @@ void printDeviceInfo(cl_device_id deviceId) {
     }
     printf("%llu) \n", maxWorkItemSizes[maxWorkItemDimensions-1]);
 
+}
+
+
+double getTime() {
+    LARGE_INTEGER freq, ticks;
+    static long long frequency = 0; 
+
+    if (frequency == 0) {
+        QueryPerformanceFrequency(&freq);
+        frequency = freq.QuadPart;
+    }
+
+    QueryPerformanceCounter(&ticks);
+
+    return (double) ticks.QuadPart / frequency;
 }

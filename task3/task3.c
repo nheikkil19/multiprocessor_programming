@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../lodepng.h"
-#include <math.h>
-#include <time.h>
 #include <omp.h>
+#include <profileapi.h>
 
 void readImage(char *filename, unsigned char **imageOut, unsigned *w, unsigned *h) {
     int err;
@@ -217,6 +216,21 @@ void occlusionFill(unsigned char *imageIn, unsigned char **imageOut, unsigned w,
     }
 }
 
+double getTime() {
+    LARGE_INTEGER freq, ticks;
+    static long long frequency = 0; 
+
+    if (frequency == 0) {
+        QueryPerformanceFrequency(&freq);
+        frequency = freq.QuadPart;
+    }
+
+    QueryPerformanceCounter(&ticks);
+
+    return (double) ticks.QuadPart / frequency;
+}
+
+
 int main(void) {
 
     // Variables
@@ -228,12 +242,12 @@ int main(void) {
     char file3[] = "..\\dataset\\depthmap.png";
     unsigned char *image1, *image2, *imageDs1, *imageDs2, *imageGray1, *imageGray2, *imageZNCC1, *imageZNCC2, *imageCross, *imageOcc, *imageOut;
     unsigned w, h, scaleFactor;
-    clock_t start, end;
+    double start, end;
     double timeElapsed;
 
 
     // Read images
-    start = clock();
+    start = getTime();
     #pragma omp parallel sections
     {
         #pragma omp section 
@@ -241,64 +255,64 @@ int main(void) {
         #pragma omp section
         readImage(file2, &image2, &w, &h);
     }
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Read files: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Read files: %f s\n", timeElapsed);
 
     // Downscale by four
-    start = clock();
+    start = getTime();
     scaleFactor = 4;
     downscaleImage(image1, &imageDs1, w, h, scaleFactor);
     downscaleImage(image2, &imageDs2, w, h, scaleFactor);
     w = w / scaleFactor;
     h = h / scaleFactor;
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Downscale: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Downscale: %f s\n", timeElapsed);
 
     // Convert to grayscale
-    start = clock();
+    start = getTime();
     grayscaleImage(imageDs1, &imageGray1, w, h);
     grayscaleImage(imageDs2, &imageGray2, w, h);
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Grayscale: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Grayscale: %f s\n", timeElapsed);
 
     // Do ZNCC
-    start = clock();
+    start = getTime();
     calcZNCC(imageGray1, imageGray2, &imageZNCC1, w, h, MAX_DISP, WIN_SIZE, 1);
     calcZNCC(imageGray2, imageGray1, &imageZNCC2, w, h, MAX_DISP, WIN_SIZE, -1);
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("ZNCC: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("ZNCC: %f s\n", timeElapsed);
 
     // Cross checking
-    start = clock();
+    start = getTime();
     crossCheck(imageZNCC1, imageZNCC2, &imageCross, w, h, THRESHOLD);
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Cross check: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Cross check: %f s\n", timeElapsed);
 
     // Occlusion fill
-    start = clock();
+    start = getTime();
     occlusionFill(imageCross, &imageOcc, w, h);
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Occlusion fill: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Occlusion fill: %f s\n", timeElapsed);
 
     // Normalize image
-    start = clock();
+    start = getTime();
     normalizeImage(imageOcc, &imageOut, w, h);
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Normalization: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Normalization: %f s\n", timeElapsed);
 
     // Save image
-    start = clock();
+    start = getTime();
     writeImage(file3, imageOut, w, h);
-    end = clock();
-    timeElapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Save file: %.3f s\n", timeElapsed);
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Save file: %f s\n", timeElapsed);
 
     // Free memory
     free(image1);
