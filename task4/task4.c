@@ -20,10 +20,12 @@ int main(void) {
     unsigned w, h, wDs, hDs;
     unsigned subpixels = 4;
     unsigned scaleFactor = 4;
-    double start, end;
+    double start, end, startTotal, endTotal;
     double timeElapsed;
     int err;
 
+    // Start timer
+    startTotal = getTime();
 
     // Read images
     start = getTime();
@@ -51,6 +53,7 @@ int main(void) {
         imageZNCC1GPU, imageZNCC2GPU, imageCrossGPU, imageOccGPU, imageOutGPU;
 
     // Prepare OpenCL
+    start = getTime();
     err = clGetPlatformIDs(0, NULL, &num_platforms);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to get the number of platforms!\n");
@@ -77,6 +80,9 @@ int main(void) {
         printf("Error: Failed to create a command commands!\n");
         return 1;
     }
+    end = getTime();
+    timeElapsed = end - start;
+    printf("Prepare OpenCL: %f s\n", timeElapsed);
 
     // Move images to GPU
     start = getTime();
@@ -197,6 +203,12 @@ int main(void) {
     clReleaseMemObject(imageCrossGPU);
     clReleaseMemObject(imageOccGPU);
     clReleaseMemObject(imageOutGPU);
+
+
+    // Report total time
+    endTotal = getTime();
+    timeElapsed = endTotal - startTotal;
+    printf("Total time: %f s\n", timeElapsed);
 
     // Print device info
     printf("\n");

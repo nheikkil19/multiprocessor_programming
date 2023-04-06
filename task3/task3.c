@@ -243,9 +243,11 @@ int main(void) {
     char file3[] = "depthmap.png";
     unsigned char *image1, *image2, *imageDs1, *imageDs2, *imageGray1, *imageGray2, *imageZNCC1, *imageZNCC2, *imageCross, *imageOcc, *imageOut;
     unsigned w, h, scaleFactor;
-    double start, end;
+    double start, end, startTotal, endTotal;
     double timeElapsed;
 
+    // Start timer
+    startTotal = getTime();
 
     // Read images
     start = getTime();
@@ -327,6 +329,11 @@ int main(void) {
     free(imageCross);
     free(imageOcc);
     free(imageOut);
+
+    // Report total time
+    endTotal = getTime();
+    timeElapsed = endTotal - startTotal;
+    printf("Total time: %f s\n", timeElapsed);
 
     return 0;
 }
