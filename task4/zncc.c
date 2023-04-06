@@ -10,6 +10,8 @@ int calcZNCC(cl_mem imageL, cl_mem imageR, cl_mem *imageOut,
     cl_kernel kernel;                   // compute kernel
     cl_image_format imageFormat;        // image format
     cl_image_desc imageDesc;            // image descriptor
+    cl_event event;                     // command queue event
+    cl_ulong start, end;                // kernel execution time measurements
 
     // Set image format
     imageFormat.image_channel_order = CL_A;
@@ -78,12 +80,24 @@ int calcZNCC(cl_mem imageL, cl_mem imageR, cl_mem *imageOut,
         return 1;
     }
 
-    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, NULL, 0, NULL, NULL);
+    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, NULL, 0, NULL, &event);
     if (err) {
         printf("Error: Failed to execute kernel! Error number = %d\n", err);
         return 1;
     }
     clFinish(commands);
+
+    err = clGetEventProfilingInfo(event,  CL_PROFILING_COMMAND_START, sizeof(start), &start, NULL);
+    if (err != CL_SUCCESS) {
+        printf("Error %d: Failed to get the start timer!\n", err);
+        return 1;
+    }
+    err = clGetEventProfilingInfo(event,  CL_PROFILING_COMMAND_END, sizeof(end), &end, NULL);
+    if (err != CL_SUCCESS) {
+        printf("Error %d: Failed to end timer!\n", err);
+        return 1;
+    }
+    printf("ZNCC kernel: %f s\n", (double) (end-start) / 1000000000);
 
     clReleaseProgram(program);
     clReleaseKernel(kernel);
@@ -101,6 +115,8 @@ int normalizeImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     cl_kernel kernel;                   // compute kernel
     cl_image_format imageFormat;        // image format
     cl_image_desc imageDesc;            // image descriptor
+    cl_event event;                     // command queue event
+    cl_ulong start, end;                // kernel execution time measurements
 
     // Set image format
     imageFormat.image_channel_order = CL_A;
@@ -165,12 +181,24 @@ int normalizeImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
         return 1;
     }
 
-    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, &local, 0, NULL, NULL);
+    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, &local, 0, NULL, &event);
     if (err) {
         printf("Error: Failed to execute kernel! Error number = %d\n", err);
         return 1;
     }
     clFinish(commands);
+
+    err = clGetEventProfilingInfo(event,  CL_PROFILING_COMMAND_START, sizeof(start), &start, NULL);
+    if (err != CL_SUCCESS) {
+        printf("Error %d: Failed to get the start timer!\n", err);
+        return 1;
+    }
+    err = clGetEventProfilingInfo(event,  CL_PROFILING_COMMAND_END, sizeof(end), &end, NULL);
+    if (err != CL_SUCCESS) {
+        printf("Error %d: Failed to end timer!\n", err);
+        return 1;
+    }
+    printf("Normalize kernel: %f s\n", (double) (end-start) / 1000000000);
 
     clReleaseProgram(program);
     clReleaseKernel(kernel);
@@ -188,6 +216,8 @@ int crossCheck(cl_mem image1, cl_mem image2, cl_mem *imageOut,
     cl_kernel kernel;                   // compute kernel
     cl_image_format imageFormat;        // image format
     cl_image_desc imageDesc;            // image descriptor
+    cl_event event;                     // command queue event
+    cl_ulong start, end;                // kernel execution time measurements
 
     // Set image format
     imageFormat.image_channel_order = CL_A;
@@ -254,12 +284,24 @@ int crossCheck(cl_mem image1, cl_mem image2, cl_mem *imageOut,
         return 1;
     }
 
-    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, NULL, 0, NULL, NULL);
+    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, NULL, 0, NULL, &event);
     if (err) {
         printf("Error: Failed to execute kernel! Error number = %d\n", err);
         return 1;
     }
     clFinish(commands);
+
+    err = clGetEventProfilingInfo(event,  CL_PROFILING_COMMAND_START, sizeof(start), &start, NULL);
+    if (err != CL_SUCCESS) {
+        printf("Error %d: Failed to get the start timer!\n", err);
+        return 1;
+    }
+    err = clGetEventProfilingInfo(event,  CL_PROFILING_COMMAND_END, sizeof(end), &end, NULL);
+    if (err != CL_SUCCESS) {
+        printf("Error %d: Failed to end timer!\n", err);
+        return 1;
+    }
+    printf("Cross check kernel: %f s\n", (double) (end-start) / 1000000000);
 
     clReleaseProgram(program);
     clReleaseKernel(kernel);
@@ -275,6 +317,8 @@ int occlusionFill(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     cl_kernel kernel;                   // compute kernel
     cl_image_format imageFormat;        // image format
     cl_image_desc imageDesc;            // image descriptor
+    cl_event event;                     // command queue event
+    cl_ulong start, end;                // kernel execution time measurements
 
     // Set image format
     imageFormat.image_channel_order = CL_A;
@@ -339,12 +383,24 @@ int occlusionFill(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
         return 1;
     }
 
-    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, NULL, 0, NULL, NULL);
+    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, NULL, 0, NULL, &event);
     if (err) {
         printf("Error: Failed to execute kernel! Error number = %d\n", err);
         return 1;
     }
     clFinish(commands);
+
+    err = clGetEventProfilingInfo(event,  CL_PROFILING_COMMAND_START, sizeof(start), &start, NULL);
+    if (err != CL_SUCCESS) {
+        printf("Error %d: Failed to get the start timer!\n", err);
+        return 1;
+    }
+    err = clGetEventProfilingInfo(event,  CL_PROFILING_COMMAND_END, sizeof(end), &end, NULL);
+    if (err != CL_SUCCESS) {
+        printf("Error %d: Failed to end timer!\n", err);
+        return 1;
+    }
+    printf("Occlusion fill kernel: %f s\n", (double) (end-start) / 1000000000);
 
     clReleaseProgram(program);
     clReleaseKernel(kernel);

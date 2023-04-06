@@ -72,7 +72,7 @@ int main(void) {
         printf("Error: Failed to create a compute context!\n");
         return 1;
     }
-    commands = clCreateCommandQueue(context, device_id, 0, &err);
+    commands = clCreateCommandQueue(context, device_id, CL_QUEUE_PROFILING_ENABLE, &err);
     if (!commands) {
         printf("Error: Failed to create a command commands!\n");
         return 1;
