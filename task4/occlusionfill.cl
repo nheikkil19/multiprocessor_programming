@@ -7,7 +7,6 @@ __kernel void occlusionFill(
     const int MAX_DIST = 1000;
 
     unsigned i = get_global_id(0);
-    // for (int i=0; i<h; i++) {
     unsigned stop;
     for (int j=0; j<w; j++) {
         if (read_imageui(imageIn, (int2)(j, i)).w == 0) {
@@ -44,5 +43,4 @@ __kernel void occlusionFill(
             write_imageui(imageOut, (int2)(j, i), read_imageui(imageIn, (int2)(j, i)));
         }
     }
-    // }
 }
