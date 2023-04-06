@@ -1,4 +1,4 @@
-#include <CL/cl.h>
+#include "transformations.h"
 
 int downscaleImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h, 
     unsigned subpixels, unsigned factor, 

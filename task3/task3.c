@@ -3,6 +3,7 @@
 #include "../lodepng.h"
 #include <omp.h>
 #include <profileapi.h>
+#include <math.h>
 
 void readImage(char *filename, unsigned char **imageOut, unsigned *w, unsigned *h) {
     int err;

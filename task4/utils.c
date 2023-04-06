@@ -1,7 +1,5 @@
-#include <stdio.h>
-#include "../lodepng.h"
-#include <CL/cl.h>
-#include <profileapi.h>
+#include "utils.h"
+#
 
 
 void readImage(char *filename, unsigned char **imageOut, unsigned *w, unsigned *h) {

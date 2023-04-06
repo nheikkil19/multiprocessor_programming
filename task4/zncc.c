@@ -1,4 +1,4 @@
-
+#include "zncc.h"
 
 int calcZNCC(cl_mem imageL, cl_mem imageR, cl_mem *imageOut, 
     unsigned w, unsigned h, unsigned max_disp, unsigned win_size, int inv,

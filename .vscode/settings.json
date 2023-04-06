@@ -57,6 +57,21 @@
     "random": "c",
     "__locale": "c",
     "__mutex_base": "c",
-    "mutex": "c"
+    "mutex": "c",
+    "grayscale": "c",
+    "__split_buffer": "c",
+    "initializer_list": "c",
+    "queue": "c",
+    "utility": "c",
+    "*.cl": "c",
+    "lodepng.h": "c",
+    "time.h": "c",
+    "cl.h": "c",
+    "cmath": "c",
+    "limits": "c",
+    "ratio": "c",
+    "semaphore": "c",
+    "ios": "c",
+    "processthreadsapi.h": "c"
   }
 }
