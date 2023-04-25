@@ -6,9 +6,10 @@ __kernel void grayscaleImage(
     unsigned subpixels
 ) {
     unsigned i = get_global_id(0);
-    for (int j=0; j<w; j++) {
+    unsigned j = get_global_id(1);
+    // for (int j=0; j<w; j++) {
         uint4 pixel = read_imageui(imageIn, (int2)(j, i));
         uint gray = (0.299 * pixel.x + 0.587 * pixel.y + 0.114 * pixel.z);
         write_imageui(imageOut, (int2)(j, i), (uint4)(gray, 0, 0, 0));
-    }
+    // }
 }
