@@ -7,8 +7,9 @@ __kernel void crossCheck(
     unsigned threshold
 ) {
     int i = get_global_id(0);
+    int j = get_global_id(1);
     int d;
-    for (int j=0; j<w; j++) {
+    // for (int j=0; j<w; j++) {
         d = read_imageui(image1, (int2)(j, i)).w;
         if ( (int)(i*w + j-d) >= 0 && abs(d - (int)read_imagei(image2, (int2)(j-d, i)).w) > threshold) {
             write_imageui(imageOut, (int2)(j, i), (uint4)(0, 0, 0, 0));
@@ -16,5 +17,5 @@ __kernel void crossCheck(
         else {
             write_imageui(imageOut, (int2)(j, i), (uint4)(d, d, d, d));
         }
-    }
+    // }
 }

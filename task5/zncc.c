@@ -211,7 +211,7 @@ int crossCheck(cl_mem image1, cl_mem image2, cl_mem *imageOut,
     cl_context context, cl_device_id device_id, cl_command_queue commands
 ) {
     int err = 0;
-    size_t global = h;                  // global domain size for our calculation
+    size_t global[2] = {h, w};          // total number of work-items in each dimension
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_image_format imageFormat;        // image format
@@ -284,7 +284,7 @@ int crossCheck(cl_mem image1, cl_mem image2, cl_mem *imageOut,
         return 1;
     }
 
-    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, NULL, 0, NULL, &event);
+    err = clEnqueueNDRangeKernel(commands, kernel, 2, NULL, global, NULL, 0, NULL, &event);
     if (err) {
         printf("Error: Failed to execute kernel! Error number = %d\n", err);
         return 1;
