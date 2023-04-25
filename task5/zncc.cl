@@ -9,13 +9,14 @@ __kernel void calcZNCC(
     int inv
 ) {
     unsigned j = get_global_id(0);
+    unsigned i = get_global_id(1);
     double imgAvgL, imgAvgR;
     double zncc1, zncc2, zncc3, zncc;
     double znccBest, bestD;
     int x, y;
     unsigned countL, countR;
 
-    for (int i=0; i<w; i++) {
+    // for (int i=0; i<w; i++) {
         znccBest = -1;
         for (int d=0; d<=max_disp; d++) {
             // Calculate means over window
@@ -76,5 +77,5 @@ __kernel void calcZNCC(
             }
         }
         write_imageui(imageOut, (int2)(i, j), (uint4)(bestD, bestD, bestD, bestD));
-    }
+    // }
 }
