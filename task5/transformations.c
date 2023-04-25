@@ -5,7 +5,7 @@ int downscaleImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     cl_context context, cl_device_id device_id, cl_command_queue commands
 ) {
     int err = 0;
-    size_t global = h/factor;           // global domain size for our calculation
+    size_t global[3] = {h/factor, w/factor, subpixels};           // total number of work-items in each dimension
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_image_format imageFormat;        // image format
@@ -81,7 +81,7 @@ int downscaleImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
         printf("Error: Failed to set kernel arguments! %d\n", err);
         return 1;
     }
-    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, NULL, 0, NULL, &event);
+    err = clEnqueueNDRangeKernel(commands, kernel, 3, NULL, global, NULL, 0, NULL, &event);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to execute kernel!\n");
         return 1;

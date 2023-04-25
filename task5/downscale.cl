@@ -6,15 +6,17 @@ __kernel void downscaleImage(
     unsigned factor,
     unsigned subpixels
 ) {
-    unsigned hOut, wOut;
-    hOut = h / factor;
-    wOut = w / factor;
+    // unsigned hOut, wOut;
+    // hOut = h / factor;
+    // wOut = w / factor;
     unsigned i = get_global_id(0);
+    unsigned j = get_global_id(1);
+    unsigned k = get_global_id(2);
 
-    for (int j=0; j<wOut; j++) {
-        for (int k=0; k<subpixels; k++) {
+    // for (int j=0; j<wOut; j++) {
+    //     for (int k=0; k<subpixels; k++) {
             uint4 pixel = read_imageui(imageIn, (int2)(j*factor, i*factor));
             write_imageui(imageOut, (int2)(j, i), pixel);
-        }
-    }
+    //     }
+    // }
 }
