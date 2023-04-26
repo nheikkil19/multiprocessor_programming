@@ -7,8 +7,9 @@ __kernel void occlusionFill(
     const int MAX_DIST = 1000;
 
     unsigned i = get_global_id(0);
+    unsigned j = get_global_id(1);
     unsigned stop;
-    for (int j=0; j<w; j++) {
+    // for (int j=0; j<w; j++) {
         if (read_imageui(imageIn, (int2)(j, i)).w == 0) {
             // Find the closest
             stop = 0;
@@ -42,5 +43,5 @@ __kernel void occlusionFill(
         else {
             write_imageui(imageOut, (int2)(j, i), read_imageui(imageIn, (int2)(j, i)));
         }
-    }
+    // }
 }
