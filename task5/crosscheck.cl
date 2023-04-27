@@ -1,7 +1,7 @@
 __kernel void crossCheck(
-    __read_only image2d_t image1,
-    __read_only image2d_t image2,
-    __write_only image2d_t imageOut,
+    __global unsigned char *image1,
+    __global unsigned char *image2,
+    __global unsigned char *imageOut,
     unsigned w,
     unsigned h,
     unsigned threshold
@@ -9,13 +9,11 @@ __kernel void crossCheck(
     int i = get_global_id(0);
     int j = get_global_id(1);
     int d;
-    // for (int j=0; j<w; j++) {
-        d = read_imageui(image1, (int2)(j, i)).w;
-        if ( (int)(i*w + j-d) >= 0 && abs(d - (int)read_imagei(image2, (int2)(j-d, i)).w) > threshold) {
-            write_imageui(imageOut, (int2)(j, i), (uint4)(0, 0, 0, 0));
-        }
-        else {
-            write_imageui(imageOut, (int2)(j, i), (uint4)(d, d, d, d));
-        }
-    // }
+    d = image1[i*w + j];
+    if ( (int)(i*w + j-d) >= 0 && abs(d - (int)image2[i*w + j-d]) > threshold) {
+        imageOut[i*w + j] = 0;
+    }
+    else {
+        imageOut[i*w + j] = d;
+    }
 }

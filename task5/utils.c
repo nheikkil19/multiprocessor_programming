@@ -75,7 +75,6 @@ int moveToGPU(unsigned char *imageIn, cl_mem *imageOut, unsigned w, unsigned h,
         printf("Error: Failed to write image to GPU memory!\n");
         return 1;
     }
-    clFinish(commands);
     return 0;
 
 }
@@ -88,15 +87,11 @@ int moveFromGPU(cl_mem imageIn, unsigned char **imageOut, unsigned w, unsigned h
     // Allocate memory on host
     *imageOut = (unsigned char *) malloc(w * h * sizeof(unsigned char));
 
-    // Move images from GPU
-    size_t origin[] = {0, 0, 0};
-    size_t region[] = {w, h, 1};
-    err  = clEnqueueReadImage(commands, imageIn, CL_TRUE, origin, region, 0, 0, *imageOut, 0, NULL, NULL);
+    err = clEnqueueReadBuffer(commands, imageIn, CL_TRUE, 0, w * h * sizeof(unsigned char), *imageOut, 0, NULL, NULL);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to read image from GPU memory!\n");
         return 1;
     }
-    clFinish(commands);
     return 0;
 }
 

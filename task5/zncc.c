@@ -8,29 +8,34 @@ int calcZNCC(cl_mem imageL, cl_mem imageR, cl_mem *imageOut,
     size_t global[2] = {h, w};             // total number of work-items in each dimension
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
-    cl_image_format imageFormat;        // image format
-    cl_image_desc imageDesc;            // image descriptor
+    // cl_image_format imageFormat;        // image format
+    // cl_image_desc imageDesc;            // image descriptor
     cl_event event;                     // command queue event
     cl_ulong start, end;                // kernel execution time measurements
 
     // Set image format
-    imageFormat.image_channel_order = CL_A;
-    imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
+    // imageFormat.image_channel_order = CL_A;
+    // imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
 
-    // Set image descriptor
-    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    imageDesc.image_width = w;
-    imageDesc.image_height = h;
-    imageDesc.image_depth = 0;
-    imageDesc.image_array_size = 1;
-    imageDesc.image_row_pitch = 0;
-    imageDesc.image_slice_pitch = 0;
-    imageDesc.num_mip_levels = 0;
-    imageDesc.num_samples = 0;
-    imageDesc.buffer = NULL;
+    // // Set image descriptor
+    // imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    // imageDesc.image_width = w;
+    // imageDesc.image_height = h;
+    // imageDesc.image_depth = 0;
+    // imageDesc.image_array_size = 1;
+    // imageDesc.image_row_pitch = 0;
+    // imageDesc.image_slice_pitch = 0;
+    // imageDesc.num_mip_levels = 0;
+    // imageDesc.num_samples = 0;
+    // imageDesc.buffer = NULL;
 
     // Allocate memory on GPU
-    *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
+    // *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
+    *imageOut = clCreateBuffer(context, CL_MEM_READ_WRITE, w * h * sizeof(unsigned char), NULL, &err);
+    if (err != CL_SUCCESS) {
+        printf("Error: Failed to create buffer on device!\n");
+        return 1;
+    }
 
     // Read the kernel code from file
     char *programSource;
@@ -113,29 +118,34 @@ int normalizeImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     size_t local = h;
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
-    cl_image_format imageFormat;        // image format
-    cl_image_desc imageDesc;            // image descriptor
+    // cl_image_format imageFormat;        // image format
+    // cl_image_desc imageDesc;            // image descriptor
     cl_event event;                     // command queue event
     cl_ulong start, end;                // kernel execution time measurements
 
     // Set image format
-    imageFormat.image_channel_order = CL_A;
-    imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
+    // imageFormat.image_channel_order = CL_A;
+    // imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
 
-    // Set image descriptor
-    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    imageDesc.image_width = w;
-    imageDesc.image_height = h;
-    imageDesc.image_depth = 0;
-    imageDesc.image_array_size = 1;
-    imageDesc.image_row_pitch = 0;
-    imageDesc.image_slice_pitch = 0;
-    imageDesc.num_mip_levels = 0;
-    imageDesc.num_samples = 0;
-    imageDesc.buffer = NULL;
+    // // Set image descriptor
+    // imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    // imageDesc.image_width = w;
+    // imageDesc.image_height = h;
+    // imageDesc.image_depth = 0;
+    // imageDesc.image_array_size = 1;
+    // imageDesc.image_row_pitch = 0;
+    // imageDesc.image_slice_pitch = 0;
+    // imageDesc.num_mip_levels = 0;
+    // imageDesc.num_samples = 0;
+    // imageDesc.buffer = NULL;
 
     // Allocate memory on GPU
-    *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
+    // *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
+    *imageOut = clCreateBuffer(context, CL_MEM_READ_WRITE, w * h * sizeof(unsigned char), NULL, &err);
+    if (err != CL_SUCCESS) {
+        printf("Error: Failed to create buffer on device!\n");
+        return 1;
+    }
 
     // Read the kernel code from file
     char *programSource;
@@ -214,29 +224,16 @@ int crossCheck(cl_mem image1, cl_mem image2, cl_mem *imageOut,
     size_t global[2] = {h, w};          // total number of work-items in each dimension
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
-    cl_image_format imageFormat;        // image format
-    cl_image_desc imageDesc;            // image descriptor
     cl_event event;                     // command queue event
     cl_ulong start, end;                // kernel execution time measurements
 
-    // Set image format
-    imageFormat.image_channel_order = CL_A;
-    imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
-
-    // Set image descriptor
-    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    imageDesc.image_width = w;
-    imageDesc.image_height = h;
-    imageDesc.image_depth = 0;
-    imageDesc.image_array_size = 1;
-    imageDesc.image_row_pitch = 0;
-    imageDesc.image_slice_pitch = 0;
-    imageDesc.num_mip_levels = 0;
-    imageDesc.num_samples = 0;
-    imageDesc.buffer = NULL;
 
     // Allocate memory on GPU
-    *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
+    *imageOut = clCreateBuffer(context, CL_MEM_READ_WRITE, w * h * sizeof(unsigned char), NULL, &err);
+    if (err != CL_SUCCESS) {
+        printf("Error: Failed to create buffer on device!\n");
+        return 1;
+    }
 
     // Read the kernel code from file
     char *programSource;
@@ -315,29 +312,15 @@ int occlusionFill(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     size_t global[2] = {h, w};                  // global domain size for our calculation
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
-    cl_image_format imageFormat;        // image format
-    cl_image_desc imageDesc;            // image descriptor
     cl_event event;                     // command queue event
     cl_ulong start, end;                // kernel execution time measurements
 
-    // Set image format
-    imageFormat.image_channel_order = CL_A;
-    imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
-
-    // Set image descriptor
-    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    imageDesc.image_width = w;
-    imageDesc.image_height = h;
-    imageDesc.image_depth = 0;
-    imageDesc.image_array_size = 1;
-    imageDesc.image_row_pitch = 0;
-    imageDesc.image_slice_pitch = 0;
-    imageDesc.num_mip_levels = 0;
-    imageDesc.num_samples = 0;
-    imageDesc.buffer = NULL;
-
     // Allocate memory on GPU
-    *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
+    *imageOut = clCreateBuffer(context, CL_MEM_READ_WRITE, w * h * sizeof(unsigned char), NULL, &err);
+    if (err != CL_SUCCESS) {
+        printf("Error: Failed to create buffer on device!\n");
+        return 1;
+    }
 
     // Read the kernel code from file
     char *programSource;

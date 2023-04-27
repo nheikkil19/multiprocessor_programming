@@ -1,6 +1,6 @@
 __kernel void normalizeImage(
-    __read_only image2d_t imageIn,
-    __write_only image2d_t imageOut,
+    __global unsigned char *imageIn,
+    __global unsigned char *imageOut,
     unsigned w,
     unsigned h
 ) {
@@ -10,14 +10,14 @@ __kernel void normalizeImage(
     unsigned i = get_global_id(0);
 
     for (int j=0; j<w; j++) {
-        uint4 pixel = read_imageui(imageIn, (int2)(j, i));
-        atomic_min(&min, (int)pixel.w);
-        atomic_max(&max, (int)pixel.w);
+        int pixel = imageIn[i*w + j];
+        atomic_min(&min, pixel);
+        atomic_max(&max, pixel);
     }
     work_group_barrier(CLK_LOCAL_MEM_FENCE);
     for (int j=0; j<w; j++) {
-        uint4 pixel = read_imageui(imageIn, (int2)(j, i));
-        int val = (int)(pixel.w - min) * 255 / (int)(max - min);
-        write_imageui(imageOut, (int2)(j, i), (uint4)(val, val, val, val));
+        int pixel = imageIn[i*w + j];
+        int val = (pixel - min) * 255 / (max - min);
+        imageOut[i*w + j] = val;
     }
 }
