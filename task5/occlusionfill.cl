@@ -8,36 +8,33 @@ __kernel void occlusionFill(
 
     int i = get_global_id(0);
     int j = get_global_id(1);
-    unsigned stop;
+    unsigned char pixel;
     if (imageIn[i*w + j] == 0) {
         // Find the closest
-        stop = 0;
-        for (int d=1; d<=MAX_DIST && !stop; d++) {
-            for (int y=-d+1; y<=d-1 && !stop; y++) {
-                if (i+y>=0 && i+y<h) {
-                    if (j-d>=0 && imageIn[(i+y)*w + j-d] != 0) {
-                        imageOut[i*w + j] = imageIn[(i+y)*w + j-d];
-                        stop = 1;
+        pixel = 0;
+        for (int d=1; d<=MAX_DIST && !pixel; d++) {
+            for (int y_offset=-d+1; y_offset<=d-1 && !pixel; y_offset++) {
+                if (i+y_offset>=0 && i+y_offset<h) {
+                    if (j-d>=0) {
+                        pixel = imageIn[(i+y_offset)*w + j-d];
                     }
-                    else if (j+d<w && imageIn[(i+y)*w + j+d] != 0) {
-                        imageOut[i*w + j] = imageIn[(i+y)*w + j+d];
-                        stop = 1;
+                    else if (j+d<w) {
+                        pixel = imageIn[(i+y_offset)*w + j+d];
                     }
                 }
             }
-            for (int x=-d; x<=d && !stop; x++) {
-                if (j+x>=0 &&j+x<w) {
-                    if (i-d>=0 && imageIn[(i-d)*w + j+x] != 0) {
-                        imageOut[i*w + j] = imageIn[(i-d)*w + j+x];
-                        stop = 1;
+            for (int x_offset=-d; x_offset<=d && !pixel; x_offset++) {
+                if (j+x_offset>=0 &&j+x_offset<w) {
+                    if (i-d>=0) {
+                        pixel = imageIn[(i-d)*w + j+x_offset];
                     }
-                    else if (i+d<h && imageIn[(i+d)*w + j+x] != 0) {
-                        imageOut[i*w + j] = imageIn[(i+d)*w + j+x];
-                        stop = 1;
+                    else if (i+d<h) {
+                        pixel = imageIn[(i+d)*w + j+x_offset];
                     }
                 }
             }
         }
+        imageOut[i*w + j] = pixel;
     }
     else {
         imageOut[i*w + j] = imageIn[i*w + j];
