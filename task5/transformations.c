@@ -5,7 +5,7 @@ int downscaleImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     cl_context context, cl_device_id device_id, cl_command_queue commands
 ) {
     int err = 0;
-    size_t global[3] = {h/factor, w/factor, subpixels};           // total number of work-items in each dimension
+    size_t global[2] = {h/factor, w/factor};           // total number of work-items in each dimension
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_image_format imageFormat;        // image format
@@ -73,15 +73,12 @@ int downscaleImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     err = 0;
     err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &imageIn);
     err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), imageOut);
-    err |= clSetKernelArg(kernel, 2, sizeof(unsigned), &w);
-    err |= clSetKernelArg(kernel, 3, sizeof(unsigned), &h);
-    err |= clSetKernelArg(kernel, 4, sizeof(unsigned), &factor);
-    err |= clSetKernelArg(kernel, 5, sizeof(unsigned), &subpixels);
+    err |= clSetKernelArg(kernel, 2, sizeof(unsigned), &factor);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to set kernel arguments! %d\n", err);
         return 1;
     }
-    err = clEnqueueNDRangeKernel(commands, kernel, 3, NULL, global, NULL, 0, NULL, &event);
+    err = clEnqueueNDRangeKernel(commands, kernel, 2, NULL, global, NULL, 0, NULL, &event);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to execute kernel!\n");
         return 1;
@@ -110,7 +107,7 @@ int grayscaleImage(cl_mem imageIn, cl_mem *imageOut,
     cl_context context, cl_device_id device_id, cl_command_queue commands
 ) {
     int err = 0;
-    size_t global[2] = {h, w};               // total number of work-items in each dimension
+    size_t global[2] = {h, w};           // total number of work-items in each dimension
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_event event;                     // command queue event
@@ -160,8 +157,6 @@ int grayscaleImage(cl_mem imageIn, cl_mem *imageOut,
     err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &imageIn);
     err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), imageOut);
     err |= clSetKernelArg(kernel, 2, sizeof(unsigned), &w);
-    err |= clSetKernelArg(kernel, 3, sizeof(unsigned), &h);
-    err |= clSetKernelArg(kernel, 4, sizeof(unsigned), &subpixels);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to set kernel arguments! %d\n", err);
         return 1;

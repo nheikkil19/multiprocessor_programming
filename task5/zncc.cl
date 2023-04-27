@@ -14,6 +14,7 @@ __kernel void calcZNCC(
     double zncc1, zncc2, zncc3, zncc;
     double znccBest, bestD;
     int x, y;
+    int left, right;
     unsigned countL, countR;
 
     znccBest = -1;
@@ -58,8 +59,8 @@ __kernel void calcZNCC(
                     x = i + win_x - win_size/2;
                     // Do not go outside the image
                     if ( x >= 0 && x-(d*inv) >= 0 && x < w && x-(d*inv) < w ) {
-                        int left = imageInL[y*w + x];
-                        int right = imageInR[y*w + x-d*inv];
+                        left = imageInL[y*w + x];
+                        right = imageInR[y*w + x-d*inv];
                         zncc1 += (left - imgAvgL) * (right - imgAvgR);
                         zncc2 += (left - imgAvgL) * (left - imgAvgL);
                         zncc3 += (right - imgAvgR) * (right - imgAvgR);

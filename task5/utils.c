@@ -65,7 +65,7 @@ int moveToGPU(unsigned char *imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     imageDesc.buffer = NULL;
 
     // Allocate memory on GPU
-    *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
+    *imageOut = clCreateImage(context, CL_MEM_READ_ONLY, &imageFormat, &imageDesc, NULL, &err);
 
     // Move images to GPU
     size_t origin[] = {0, 0, 0};
