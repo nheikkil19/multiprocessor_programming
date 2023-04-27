@@ -9,7 +9,7 @@
 
 int main(void) {
 
-    // Variables
+    // Variables;
     unsigned const MAX_DISP = 260/4;
     unsigned const WIN_SIZE = 9;
     unsigned const THRESHOLD = 8;
@@ -18,7 +18,6 @@ int main(void) {
     char file3[] = "depthmap.png";
     unsigned char *image1, *image2, *imageOut;
     unsigned w, h, wDs, hDs;
-    unsigned subpixels = 4;
     unsigned scaleFactor = 4;
     double start, end, startTotal, endTotal;
     double timeElapsed;
@@ -98,8 +97,8 @@ int main(void) {
 
     // Downscale by four
     start = getTime();
-    err  = downscaleImage(image1GPU, &imageDs1GPU, w, h, subpixels, scaleFactor, context, device_id, commands);
-    err |= downscaleImage(image2GPU, &imageDs2GPU, w, h, subpixels, scaleFactor, context, device_id, commands);
+    err  = downscaleImage(image1GPU, &imageDs1GPU, w, h, scaleFactor, context, device_id, commands);
+    err |= downscaleImage(image2GPU, &imageDs2GPU, w, h, scaleFactor, context, device_id, commands);
     if (err) {
         printf("Error: Failed to downscale image!\n");
         return 1;
@@ -112,8 +111,8 @@ int main(void) {
 
     // Convert to grayscale
     start = getTime();
-    err  = grayscaleImage(imageDs1GPU, &imageGray1GPU, wDs, hDs, subpixels, context, device_id, commands);
-    err |= grayscaleImage(imageDs2GPU, &imageGray2GPU, wDs, hDs, subpixels,  context, device_id, commands);
+    err  = grayscaleImage(imageDs1GPU, &imageGray1GPU, wDs, hDs, context, device_id, commands);
+    err |= grayscaleImage(imageDs2GPU, &imageGray2GPU, wDs, hDs, context, device_id, commands);
     if (err) {
         printf("Error: Failed to convert to grayscale!\n");
         return 1;
@@ -211,8 +210,8 @@ int main(void) {
     printf("Total time: %f s\n", timeElapsed);
 
     // Print device info
-    printf("\n");
-    printDeviceInfo(device_id);
+    // printf("\n");
+    // printDeviceInfo(device_id);
 
     return 0;
 }

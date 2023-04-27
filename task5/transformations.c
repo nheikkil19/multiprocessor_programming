@@ -1,7 +1,7 @@
 #include "transformations.h"
 
 int downscaleImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h, 
-    unsigned subpixels, unsigned factor, 
+    unsigned factor, 
     cl_context context, cl_device_id device_id, cl_command_queue commands
 ) {
     int err = 0;
@@ -103,7 +103,7 @@ int downscaleImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
 }
 
 int grayscaleImage(cl_mem imageIn, cl_mem *imageOut,
-    unsigned w, unsigned h, unsigned subpixels,
+    unsigned w, unsigned h,
     cl_context context, cl_device_id device_id, cl_command_queue commands
 ) {
     int err = 0;
