@@ -75,6 +75,7 @@ int moveToGPU(unsigned char *imageIn, cl_mem *imageOut, unsigned w, unsigned h,
         printf("Error: Failed to write image to GPU memory!\n");
         return 1;
     }
+    clFinish(commands);
     return 0;
 
 }
@@ -95,6 +96,7 @@ int moveFromGPU(cl_mem imageIn, unsigned char **imageOut, unsigned w, unsigned h
         printf("Error: Failed to read image from GPU memory!\n");
         return 1;
     }
+    clFinish(commands);
     return 0;
 }
 
