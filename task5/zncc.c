@@ -5,7 +5,8 @@ int calcZNCC(cl_mem imageL, cl_mem imageR, cl_mem *imageOut,
     cl_context context, cl_device_id device_id, cl_command_queue commands
 ) {
     int err = 0;
-    size_t global[2] = {h, w};             // total number of work-items in each dimension
+    size_t global[2] = {ceil(h / win_size)*win_size, ceil(w / win_size)*win_size };             // total number of work-items in each dimension
+    size_t local[2] = {win_size, win_size};
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_event event;                     // command queue event
@@ -21,7 +22,7 @@ int calcZNCC(cl_mem imageL, cl_mem imageR, cl_mem *imageOut,
     // Read the kernel code from file
     char *programSource;
     programSource = (char *) malloc(sizeof(char) * 4096);
-    err = readTextFile("zncc.cl", programSource, 4096);
+    err = readTextFile("zncc_alt.cl", programSource, 4096);
     if (err) {
         printf("Error: Error when reading the file.");
         return 1;
@@ -52,21 +53,24 @@ int calcZNCC(cl_mem imageL, cl_mem imageR, cl_mem *imageOut,
         return 1;
     }
 
+
     err = 0;
     err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &imageL);
     err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &imageR);
     err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), imageOut);
-    err |= clSetKernelArg(kernel, 3, sizeof(unsigned), &w);
-    err |= clSetKernelArg(kernel, 4, sizeof(unsigned), &h);
-    err |= clSetKernelArg(kernel, 5, sizeof(unsigned), &max_disp);
-    err |= clSetKernelArg(kernel, 6, sizeof(unsigned), &win_size);
-    err |= clSetKernelArg(kernel, 7, sizeof(int), &inv);
+    err |= clSetKernelArg(kernel, 3, win_size*win_size*sizeof(unsigned char), NULL);
+    err |= clSetKernelArg(kernel, 4, win_size*win_size*sizeof(unsigned char), NULL);
+    err |= clSetKernelArg(kernel, 5, sizeof(unsigned), &w);
+    err |= clSetKernelArg(kernel, 6, sizeof(unsigned), &h);
+    err |= clSetKernelArg(kernel, 7, sizeof(unsigned), &max_disp);
+    err |= clSetKernelArg(kernel, 8, sizeof(unsigned), &win_size);
+    err |= clSetKernelArg(kernel, 9, sizeof(int), &inv);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to set kernel arguments! %d\n", err);
         return 1;
     }
 
-    err = clEnqueueNDRangeKernel(commands, kernel, 2, NULL, global, NULL, 0, NULL, &event);
+    err = clEnqueueNDRangeKernel(commands, kernel, 2, NULL, global, local, 0, NULL, &event);
     if (err) {
         printf("Error: Failed to execute kernel! Error number = %d\n", err);
         return 1;

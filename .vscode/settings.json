@@ -63,7 +63,7 @@
     "initializer_list": "c",
     "queue": "c",
     "utility": "c",
-    "*.cl": "c",
+    "*.cl": "opencl",
     "lodepng.h": "c",
     "time.h": "c",
     "cl.h": "c",
@@ -72,6 +72,7 @@
     "ratio": "c",
     "semaphore": "c",
     "ios": "c",
-    "processthreadsapi.h": "c"
+    "processthreadsapi.h": "c",
+    "atomic": "c"
   }
 }
