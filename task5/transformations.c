@@ -1,8 +1,9 @@
 #include "transformations.h"
 
 int downscaleImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h, 
-    unsigned factor, 
-    cl_context context, cl_device_id device_id, cl_command_queue commands
+    unsigned factor,
+    cl_context context, cl_device_id device_id, cl_command_queue commands,
+    double *time
 ) {
     int err = 0;
     size_t global[2] = {h/factor, w/factor};           // total number of work-items in each dimension
@@ -95,7 +96,7 @@ int downscaleImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
         printf("Error %d: Failed to end timer!\n", err);
         return 1;
     }
-    printf("Downscale kernel: %f s\n", (double) (end-start) / 1000000000);
+    *time = (double) (end-start) / 1000000000;
 
     clReleaseProgram(program);
     clReleaseKernel(kernel);
@@ -104,7 +105,8 @@ int downscaleImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
 
 int grayscaleImage(cl_mem imageIn, cl_mem *imageOut,
     unsigned w, unsigned h,
-    cl_context context, cl_device_id device_id, cl_command_queue commands
+    cl_context context, cl_device_id device_id, cl_command_queue commands,
+    double *time
 ) {
     int err = 0;
     size_t global[2] = {h, w};           // total number of work-items in each dimension
@@ -178,7 +180,7 @@ int grayscaleImage(cl_mem imageIn, cl_mem *imageOut,
         printf("Error %d: Failed to end timer!\n", err);
         return 1;
     }
-    printf("Grayscale kernel: %f s\n", (double) (end-start) / 1000000000);
+    *time = (double) (end-start) / 1000000000;
 
     clReleaseProgram(program);
     clReleaseKernel(kernel);

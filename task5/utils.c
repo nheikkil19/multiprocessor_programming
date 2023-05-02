@@ -1,5 +1,5 @@
 #include "utils.h"
-#
+
 
 
 void readImage(char *filename, unsigned char **imageOut, unsigned *w, unsigned *h) {
@@ -154,4 +154,33 @@ double getTime() {
     QueryPerformanceCounter(&ticks);
 
     return (double) ticks.QuadPart / frequency;
+}
+
+double getCPULoad() {
+    FILETIME idle, kernel, user;
+    static LARGE_INTEGER idleStart, kernelStart, userStart;
+    LARGE_INTEGER idleEnd, kernelEnd, userEnd;
+    long long idleTime, kernelTime, userTime;
+    double load;
+
+    GetSystemTimes(&idle, &kernel, &user);
+
+    idleEnd.HighPart = idle.dwHighDateTime;
+    idleEnd.LowPart = idle.dwLowDateTime;
+    kernelEnd.HighPart = kernel.dwHighDateTime;
+    kernelEnd.LowPart = kernel.dwLowDateTime;
+    userEnd.LowPart = user.dwLowDateTime;
+    userEnd.LowPart = user.dwLowDateTime;
+
+    idleTime = idleEnd.QuadPart - idleStart.QuadPart;
+    kernelTime = kernelEnd.QuadPart - kernelStart.QuadPart;
+    userTime = userEnd.QuadPart - userStart.QuadPart;
+
+    load = 1 - ((double) idleTime) / (kernelTime + userTime);
+
+    idleStart = idleEnd;
+    kernelStart = kernelEnd;
+    userStart = userEnd;
+
+    return load * 100;
 }
