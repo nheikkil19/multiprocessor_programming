@@ -5,7 +5,8 @@ __kernel void grayscaleImage(
 ) {
     unsigned i = get_global_id(0);
     unsigned j = get_global_id(1);
-    float4 pixel = read_imagef(imageIn, (int2)(j, i));
-    float4 factors = (float4) (0.299, 0.587, 0.114, 0);
-    imageOut[i*w + j] = dot(pixel, factors);
+    int4 pixel4 = read_imagei(imageIn, (int2)(j, i));
+    int3 pixel3 = (int3) (pixel4.x, pixel4.y, pixel4.z);
+    float3 factors = (float3) (0.299, 0.587, 0.114);
+    imageOut[i*w + j] = dot(convert_float3(pixel3), factors);
 }
