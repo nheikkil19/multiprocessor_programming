@@ -176,8 +176,12 @@ double getCPULoad() {
     kernelTime = kernelEnd.QuadPart - kernelStart.QuadPart;
     userTime = userEnd.QuadPart - userStart.QuadPart;
 
-    load = 1 - ((double) idleTime) / (kernelTime + userTime);
-
+    if (kernelTime + userTime == 0) {
+        load = 0;
+    }
+    else {
+        load = 1 - ((double) idleTime) / (kernelTime + userTime);
+    }
     idleStart = idleEnd;
     kernelStart = kernelEnd;
     userStart = userEnd;
