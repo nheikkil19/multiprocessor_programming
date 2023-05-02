@@ -149,6 +149,7 @@ int normalizeImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), imageOut);
     err |= clSetKernelArg(kernel, 2, sizeof(unsigned), &w);
     err |= clSetKernelArg(kernel, 3, sizeof(unsigned), &h);
+    err |= clSetKernelArg(kernel, 4, sizeof(int) * w * 2, NULL);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to set kernel arguments! %d\n", err);
         return 1;
