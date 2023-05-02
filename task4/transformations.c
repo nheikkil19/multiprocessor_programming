@@ -2,7 +2,8 @@
 
 int downscaleImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h, 
     unsigned subpixels, unsigned factor, 
-    cl_context context, cl_device_id device_id, cl_command_queue commands
+    cl_context context, cl_device_id device_id, cl_command_queue commands,
+    double *time
 ) {
     int err = 0;
     size_t global = h/factor;           // global domain size for our calculation
@@ -98,7 +99,7 @@ int downscaleImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
         printf("Error %d: Failed to end timer!\n", err);
         return 1;
     }
-    printf("Downscale kernel: %f s\n", (double) (end-start) / 1000000000);
+    *time = (double) (end-start) / 1000000000;
 
     clReleaseProgram(program);
     clReleaseKernel(kernel);
@@ -107,7 +108,8 @@ int downscaleImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
 
 int grayscaleImage(cl_mem imageIn, cl_mem *imageOut,
     unsigned w, unsigned h, unsigned subpixels,
-    cl_context context, cl_device_id device_id, cl_command_queue commands
+    cl_context context, cl_device_id device_id, cl_command_queue commands,
+    double *time
 ) {
     int err = 0;
     size_t global = h;               // global domain size for our calculation
@@ -200,7 +202,7 @@ int grayscaleImage(cl_mem imageIn, cl_mem *imageOut,
         printf("Error %d: Failed to end timer!\n", err);
         return 1;
     }
-    printf("Grayscale kernel: %f s\n", (double) (end-start) / 1000000000);
+    *time = (double) (end-start) / 1000000000;
 
     clReleaseProgram(program);
     clReleaseKernel(kernel);

@@ -2,7 +2,8 @@
 
 int calcZNCC(cl_mem imageL, cl_mem imageR, cl_mem *imageOut, 
     unsigned w, unsigned h, unsigned max_disp, unsigned win_size, int inv,
-    cl_context context, cl_device_id device_id, cl_command_queue commands
+    cl_context context, cl_device_id device_id, cl_command_queue commands,
+    double *time
 ) {
     int err = 0;
     size_t global = h;             // global domain size for our calculation
@@ -97,7 +98,7 @@ int calcZNCC(cl_mem imageL, cl_mem imageR, cl_mem *imageOut,
         printf("Error %d: Failed to end timer!\n", err);
         return 1;
     }
-    printf("ZNCC kernel: %f s\n", (double) (end-start) / 1000000000);
+    *time = (double) (end-start) / 1000000000;
 
     clReleaseProgram(program);
     clReleaseKernel(kernel);
@@ -106,7 +107,8 @@ int calcZNCC(cl_mem imageL, cl_mem imageR, cl_mem *imageOut,
 
 
 int normalizeImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
-    cl_context context, cl_device_id device_id, cl_command_queue commands
+    cl_context context, cl_device_id device_id, cl_command_queue commands,
+    double *time
 ) {
     int err = 0;
     size_t global = h;                  // global domain size for our calculation
@@ -198,7 +200,7 @@ int normalizeImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
         printf("Error %d: Failed to end timer!\n", err);
         return 1;
     }
-    printf("Normalize kernel: %f s\n", (double) (end-start) / 1000000000);
+    *time = (double) (end-start) / 1000000000;
 
     clReleaseProgram(program);
     clReleaseKernel(kernel);
@@ -208,7 +210,8 @@ int normalizeImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
 
 int crossCheck(cl_mem image1, cl_mem image2, cl_mem *imageOut, 
     unsigned w, unsigned h, unsigned threshold,
-    cl_context context, cl_device_id device_id, cl_command_queue commands
+    cl_context context, cl_device_id device_id, cl_command_queue commands,
+    double *time
 ) {
     int err = 0;
     size_t global = h;                  // global domain size for our calculation
@@ -301,7 +304,7 @@ int crossCheck(cl_mem image1, cl_mem image2, cl_mem *imageOut,
         printf("Error %d: Failed to end timer!\n", err);
         return 1;
     }
-    printf("Cross check kernel: %f s\n", (double) (end-start) / 1000000000);
+    *time = (double) (end-start) / 1000000000;
 
     clReleaseProgram(program);
     clReleaseKernel(kernel);
@@ -309,7 +312,8 @@ int crossCheck(cl_mem image1, cl_mem image2, cl_mem *imageOut,
 }
 
 int occlusionFill(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
-    cl_context context, cl_device_id device_id, cl_command_queue commands
+    cl_context context, cl_device_id device_id, cl_command_queue commands,
+    double *time
 ) {
     int err = 0;
     size_t global = h;                  // global domain size for our calculation
@@ -400,7 +404,7 @@ int occlusionFill(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
         printf("Error %d: Failed to end timer!\n", err);
         return 1;
     }
-    printf("Occlusion fill kernel: %f s\n", (double) (end-start) / 1000000000);
+    *time = (double) (end-start) / 1000000000;
 
     clReleaseProgram(program);
     clReleaseKernel(kernel);

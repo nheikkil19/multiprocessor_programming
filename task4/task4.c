@@ -20,13 +20,17 @@ int main(void) {
     unsigned w, h, wDs, hDs;
     unsigned subpixels = 4;
     unsigned scaleFactor = 4;
-    double start, end, startTotal, endTotal;
-    double timeElapsed;
+    double start, end, startTotal, endTotal, kernel1, kernel2;
+    double timeElapsed, load;
     int err;
+
+    // Print headers
+    printf("%-16s %-13s %-13s %-13s %-13s\n", "STEP", "CPU LOAD", "TOTAL TIME", "KERNEL 1", "KERNEL 2");
+
 
     // Start timer
     startTotal = getTime();
-
+    getCPULoad();
     // Read images
     start = getTime();
     #pragma omp parallel sections
@@ -36,9 +40,10 @@ int main(void) {
         #pragma omp section
         readImage(file2, &image2, &w, &h);
     }
+    load = getCPULoad();
     end = getTime();
     timeElapsed = end - start;
-    printf("Read files: %f s\n", timeElapsed);
+    printf("%-16s %-13.2f %-13f\n", "Read images:", load, timeElapsed);
 
     // OpenCL variables
     cl_uint num_platforms;
@@ -54,6 +59,7 @@ int main(void) {
 
     // Prepare OpenCL
     start = getTime();
+    getCPULoad();
     err = clGetPlatformIDs(0, NULL, &num_platforms);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to get the number of platforms!\n");
@@ -80,117 +86,144 @@ int main(void) {
         printf("Error: Failed to create a command commands!\n");
         return 1;
     }
+    load = getCPULoad();
     end = getTime();
     timeElapsed = end - start;
-    printf("Prepare OpenCL: %f s\n", timeElapsed);
+    printf("%-16s %-13.2f %-13f\n", "Prepare OpenCL:", load, timeElapsed);
+
 
     // Move images to GPU
     start = getTime();
+    getCPULoad();
     err  = moveToGPU(image1, &image1GPU, w, h, context, commands);
     err |= moveToGPU(image2, &image2GPU, w, h, context, commands);
     if (err) {
         printf("Error: Failed to move image to the device!\n");
         return 1;
     }
+    load = getCPULoad();
     end = getTime();
     timeElapsed = end - start;
-    printf("Move to GPU: %f s\n", timeElapsed);
+    printf("%-16s %-13.2f %-13f\n", "Move to GPU:", load, timeElapsed);
+
 
     // Downscale by four
     start = getTime();
-    err  = downscaleImage(image1GPU, &imageDs1GPU, w, h, subpixels, scaleFactor, context, device_id, commands);
-    err |= downscaleImage(image2GPU, &imageDs2GPU, w, h, subpixels, scaleFactor, context, device_id, commands);
+    getCPULoad();
+    err  = downscaleImage(image1GPU, &imageDs1GPU, w, h, scaleFactor, subpixels, context, device_id, commands, &kernel1);
+    err |= downscaleImage(image2GPU, &imageDs2GPU, w, h, scaleFactor, subpixels, context, device_id, commands, &kernel2);
     if (err) {
         printf("Error: Failed to downscale image!\n");
         return 1;
     }
     wDs = w / scaleFactor;
     hDs = h / scaleFactor;
+    load = getCPULoad();
     end = getTime();
     timeElapsed = end - start;
-    printf("Downscale: %f s\n", timeElapsed);
+    printf("%-16s %-13.2f %-13f %-13f %-13f\n", "Downscale:", load, timeElapsed, kernel1, kernel2);
+
 
     // Convert to grayscale
     start = getTime();
-    err  = grayscaleImage(imageDs1GPU, &imageGray1GPU, wDs, hDs, subpixels, context, device_id, commands);
-    err |= grayscaleImage(imageDs2GPU, &imageGray2GPU, wDs, hDs, subpixels,  context, device_id, commands);
+    getCPULoad();
+    err  = grayscaleImage(imageDs1GPU, &imageGray1GPU, wDs, hDs, subpixels, context, device_id, commands, &kernel1);
+    err |= grayscaleImage(imageDs2GPU, &imageGray2GPU, wDs, hDs, subpixels, context, device_id, commands, &kernel2);
     if (err) {
         printf("Error: Failed to convert to grayscale!\n");
         return 1;
     }
+    load = getCPULoad();
     end = getTime();
     timeElapsed = end - start;
-    printf("Grayscale: %f s\n", timeElapsed);
+    printf("%-16s %-13.2f %-13f %-13f %-13f\n", "Grayscale:", load, timeElapsed, kernel1, kernel2);
+
 
     // Do ZNCC
     start = getTime();
-    err = calcZNCC(imageGray1GPU, imageGray2GPU, &imageZNCC1GPU, wDs, hDs, MAX_DISP, WIN_SIZE, 1, context, device_id, commands);
-    err = calcZNCC(imageGray2GPU, imageGray1GPU, &imageZNCC2GPU, wDs, hDs, MAX_DISP, WIN_SIZE, -1, context, device_id, commands);
+    getCPULoad();
+    err = calcZNCC(imageGray1GPU, imageGray2GPU, &imageZNCC1GPU, wDs, hDs, MAX_DISP, WIN_SIZE, 1, context, device_id, commands, &kernel1);
+    err = calcZNCC(imageGray2GPU, imageGray1GPU, &imageZNCC2GPU, wDs, hDs, MAX_DISP, WIN_SIZE, -1, context, device_id, commands, &kernel2);
     if (err) {
         printf("Error: Failed to calculate ZNCC!\n");
         return 1;
     }
+    load = getCPULoad();
     end = getTime();
     timeElapsed = end - start;
-    printf("ZNCC: %f s\n", timeElapsed);
+    printf("%-16s %-13.2f %-13f %-13f %-13f\n", "ZNCC:", load, timeElapsed, kernel1, kernel2);
+
 
     // Cross checking
     start = getTime();
-    err = crossCheck(imageZNCC1GPU, imageZNCC2GPU, &imageCrossGPU, wDs, hDs, THRESHOLD, context, device_id, commands);
+    getCPULoad();
+    err = crossCheck(imageZNCC1GPU, imageZNCC2GPU, &imageCrossGPU, wDs, hDs, THRESHOLD, context, device_id, commands, &kernel1);
     if (err) {
         printf("Error: Failed to perform cross checking!\n");
         return 1;
     }
+    load = getCPULoad();
     end = getTime();
     timeElapsed = end - start;
-    printf("Cross check: %f s\n", timeElapsed);
+    printf("%-16s %-13.2f %-13f %-13f\n", "Cross check:", load, timeElapsed, kernel1);
+
 
     // Occlusion fill
     start = getTime();
-    err = occlusionFill(imageCrossGPU, &imageOccGPU, wDs, hDs, context, device_id, commands);
+    getCPULoad();
+    err = occlusionFill(imageCrossGPU, &imageOccGPU, wDs, hDs, context, device_id, commands, &kernel1);
     if (err) {
         printf("Error: Failed to perform occlusion fill!\n");
         return 1;
     }
+    load = getCPULoad();
     end = getTime();
     timeElapsed = end - start;
-    printf("Occlusion fill: %f s\n", timeElapsed);
+    printf("%-16s %-13.2f %-13f %-13f\n", "Occlusion fill:", load, timeElapsed, kernel1);
+
 
     // Normalize image
     start = getTime();
-    err = normalizeImage(imageOccGPU, &imageOutGPU, wDs, hDs, context, device_id, commands);
+    getCPULoad();
+    err = normalizeImage(imageOccGPU, &imageOutGPU, wDs, hDs, context, device_id, commands, &kernel1);
     if (err) {
         printf("Error: Failed to normalize image!\n");
         return 1;
     }
+    load = getCPULoad();
     end = getTime();
     timeElapsed = end - start;
-    printf("Normalization: %f s\n", timeElapsed);
+    printf("%-16s %-13.2f %-13f %-13f\n", "Normalization:", load, timeElapsed, kernel1);
+
 
     // Move image back from GPU
     start = getTime();
+    getCPULoad();
     err = moveFromGPU(imageOutGPU, &imageOut, wDs, hDs, commands);
     if (err) {
         printf("Error: Failed to move image from the device!\n");
         return 1;
     }
+    load = getCPULoad();
     end = getTime();
     timeElapsed = end - start;
-    printf("Move from GPU: %f s\n", timeElapsed);
+    printf("%-16s %-13.2f %-13f\n", "Move from GPU:", load, timeElapsed);
+
 
     // Save image
     start = getTime();
+    getCPULoad();
     writeImage(file3, imageOut, wDs, hDs);
+    load = getCPULoad();
     end = getTime();
     timeElapsed = end - start;
-    printf("Save file: %f s\n", timeElapsed);
+    printf("%-16s %-13.2f %-13f\n", "Save file:", load, timeElapsed);
 
 
     // Free memory
     free(image1);
     free(image2);
     free(imageOut);
-
 
     clReleaseMemObject(image1GPU);
     clReleaseMemObject(image2GPU);
@@ -208,7 +241,7 @@ int main(void) {
     // Report total time
     endTotal = getTime();
     timeElapsed = endTotal - startTotal;
-    printf("Total time: %f s\n", timeElapsed);
+    printf("\nTotal time: %f s\n", timeElapsed);
 
     // Print device info
     printf("\n");
