@@ -95,8 +95,8 @@ int normalizeImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     cl_context context, cl_device_id device_id, cl_command_queue commands
 ) {
     int err = 0;
-    size_t global = h;                  // global domain size for our calculation
-    size_t local = h;
+    size_t global = w;                  // global domain size for our calculation
+    size_t local = w;
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_event event;                     // command queue event
