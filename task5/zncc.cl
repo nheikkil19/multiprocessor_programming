@@ -17,34 +17,47 @@ __kernel void calcZNCC(
     int left, right;
     unsigned countL, countR;
 
+    imgAvgL = 0;
+    countL = 0;
+
+    // Calculate average for left window
+    for (int win_y=0; win_y<win_size; win_y++) {
+        y = j + win_y - win_size/2;
+        // Do not go outside the image
+        if ( y >= 0 && y < h ) {
+            for (int win_x=0; win_x<win_size; win_x++) {
+                x = i + win_x - win_size/2;
+                // Do not go outside the image
+                if ( x >= 0 && x < w ) {
+                    // Add pixel values
+                    imgAvgL += imageInL[y*w + x];
+                    countL++;
+                }
+            }
+        }
+    }
+    imgAvgL = imgAvgL / countL;
+
     znccBest = -1;
     for (int d=0; d<=max_disp; d++) {
         // Calculate means over window
-        imgAvgL = 0;
         imgAvgR = 0;
-        countL = 0;
         countR = 0;
         for (int win_y=0; win_y<win_size; win_y++) {
             y = j + win_y - win_size/2;
             // Do not go outside the image
             if ( y >= 0 && y < h ) {
                 for (int win_x=0; win_x<win_size; win_x++) {
-                    x = i + win_x - win_size/2;
+                    x = i + win_x - win_size/2 - d*inv;
                     // Do not go outside the image
                     if ( x >= 0 && x < w ) {
-                        // Add pixel values
-                        imgAvgL += imageInL[y*w + x];
-                        countL++;
-                    }
-                    if ( x-d*inv >= 0 && x-d*inv < w ) {
-                        imgAvgR += imageInR[y*w + x-d*inv];
+                        imgAvgR += imageInR[y*w + x];
                         countR++;
                     }
                 }
             }
         }
         // Calculate mean
-        imgAvgL = imgAvgL / countL;
         imgAvgR = imgAvgR / countR;
 
         // Calculate ZNCC
