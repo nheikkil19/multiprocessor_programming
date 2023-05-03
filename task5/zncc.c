@@ -188,7 +188,8 @@ int crossCheck(cl_mem image1, cl_mem image2, cl_mem *imageOut,
     double *time
 ) {
     int err = 0;
-    size_t global[2] = {h, w};          // total number of work-items in each dimension
+    size_t global[2] = {ceil(h/32.f)*32, ceil(w/32.f)*32};          // total number of work-items in each dimension
+    size_t local[2] = {32, 32};
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_event event;                     // command queue event
@@ -247,7 +248,7 @@ int crossCheck(cl_mem image1, cl_mem image2, cl_mem *imageOut,
         return 1;
     }
 
-    err = clEnqueueNDRangeKernel(commands, kernel, 2, NULL, global, NULL, 0, NULL, &event);
+    err = clEnqueueNDRangeKernel(commands, kernel, 2, NULL, global, local, 0, NULL, &event);
     if (err) {
         printf("Error: Failed to execute kernel! Error number = %d\n", err);
         return 1;
