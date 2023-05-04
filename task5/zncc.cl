@@ -10,9 +10,9 @@ __kernel void calcZNCC(
 ) {
     unsigned j = get_global_id(0);
     unsigned i = get_global_id(1);
-    double imgAvgL, imgAvgR;
-    double zncc1, zncc2, zncc3, zncc;
-    double znccBest, bestD;
+    float imgAvgL, imgAvgR;
+    float zncc1, zncc2, zncc3, zncc;
+    float znccBest, bestD;
     int x, y;
     int left, right;
     unsigned countL, countR;
@@ -89,5 +89,6 @@ __kernel void calcZNCC(
             bestD = d;
         }
     }
+
     imageOut[j*w + i] = bestD;
 }
