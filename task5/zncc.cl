@@ -12,7 +12,8 @@ __kernel void calcZNCC(
     unsigned i = get_global_id(1);
     float imgAvgL, imgAvgR;
     float zncc1, zncc2, zncc3, zncc;
-    float znccBest, bestD;
+    float znccBest;
+    unsigned char bestD;
     int x, y;
     int left, right;
     unsigned countL, countR;
