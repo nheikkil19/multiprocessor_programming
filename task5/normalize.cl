@@ -36,6 +36,4 @@ __kernel void normalizeImage(
         int val = (pixel - min) * 255 / (max - min);
         imageOut[i*w + j] = val;
     }
-    if (j == 0)
-        printf("min: %d, max: %d\n", min, max);
 }
