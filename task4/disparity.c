@@ -1,4 +1,4 @@
-#include "zncc.h"
+#include "disparity.h"
 
 int calcZNCC(cl_mem imageL, cl_mem imageR, cl_mem *imageOut, 
     unsigned w, unsigned h, unsigned max_disp, unsigned win_size, int inv,
@@ -6,19 +6,32 @@ int calcZNCC(cl_mem imageL, cl_mem imageR, cl_mem *imageOut,
     double *time
 ) {
     int err = 0;
-    size_t global[2] = {ceil(h/4.f)*4, ceil(w/8.f)*8};          // total number of work-items in each dimension
-    size_t local[2] = {4, 8};
+    size_t global = h;             // global domain size for our calculation
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
+    cl_image_format imageFormat;        // image format
+    cl_image_desc imageDesc;            // image descriptor
     cl_event event;                     // command queue event
     cl_ulong start, end;                // kernel execution time measurements
 
+    // Set image format
+    imageFormat.image_channel_order = CL_A;
+    imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
+
+    // Set image descriptor
+    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    imageDesc.image_width = w;
+    imageDesc.image_height = h;
+    imageDesc.image_depth = 0;
+    imageDesc.image_array_size = 1;
+    imageDesc.image_row_pitch = 0;
+    imageDesc.image_slice_pitch = 0;
+    imageDesc.num_mip_levels = 0;
+    imageDesc.num_samples = 0;
+    imageDesc.buffer = NULL;
+
     // Allocate memory on GPU
-    *imageOut = clCreateBuffer(context, CL_MEM_READ_WRITE, w * h * sizeof(unsigned char), NULL, &err);
-    if (err != CL_SUCCESS) {
-        printf("Error: Failed to create buffer on device!\n");
-        return 1;
-    }
+    *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
 
     // Read the kernel code from file
     char *programSource;
@@ -68,7 +81,7 @@ int calcZNCC(cl_mem imageL, cl_mem imageR, cl_mem *imageOut,
         return 1;
     }
 
-    err = clEnqueueNDRangeKernel(commands, kernel, 2, NULL, global, local, 0, NULL, &event);
+    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, NULL, 0, NULL, &event);
     if (err) {
         printf("Error: Failed to execute kernel! Error number = %d\n", err);
         return 1;
@@ -98,20 +111,33 @@ int normalizeImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     double *time
 ) {
     int err = 0;
-    size_t global = w;                  // global domain size for our calculation
-    size_t local = w;
+    size_t global = h;                  // global domain size for our calculation
+    size_t local = h;
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
+    cl_image_format imageFormat;        // image format
+    cl_image_desc imageDesc;            // image descriptor
     cl_event event;                     // command queue event
     cl_ulong start, end;                // kernel execution time measurements
 
+    // Set image format
+    imageFormat.image_channel_order = CL_A;
+    imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
+
+    // Set image descriptor
+    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    imageDesc.image_width = w;
+    imageDesc.image_height = h;
+    imageDesc.image_depth = 0;
+    imageDesc.image_array_size = 1;
+    imageDesc.image_row_pitch = 0;
+    imageDesc.image_slice_pitch = 0;
+    imageDesc.num_mip_levels = 0;
+    imageDesc.num_samples = 0;
+    imageDesc.buffer = NULL;
 
     // Allocate memory on GPU
-    *imageOut = clCreateBuffer(context, CL_MEM_WRITE_ONLY, w * h * sizeof(unsigned char), NULL, &err);
-    if (err != CL_SUCCESS) {
-        printf("Error: Failed to create buffer on device!\n");
-        return 1;
-    }
+    *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
 
     // Read the kernel code from file
     char *programSource;
@@ -152,7 +178,6 @@ int normalizeImage(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), imageOut);
     err |= clSetKernelArg(kernel, 2, sizeof(unsigned), &w);
     err |= clSetKernelArg(kernel, 3, sizeof(unsigned), &h);
-    err |= clSetKernelArg(kernel, 4, sizeof(int) * w * 2, NULL);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to set kernel arguments! %d\n", err);
         return 1;
@@ -189,20 +214,32 @@ int crossCheck(cl_mem image1, cl_mem image2, cl_mem *imageOut,
     double *time
 ) {
     int err = 0;
-    size_t global[2] = {ceil(h/8.f)*8, ceil(w/8.f)*8};          // total number of work-items in each dimension
-    size_t local[2] = {8, 8};
+    size_t global = h;                  // global domain size for our calculation
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
+    cl_image_format imageFormat;        // image format
+    cl_image_desc imageDesc;            // image descriptor
     cl_event event;                     // command queue event
     cl_ulong start, end;                // kernel execution time measurements
 
+    // Set image format
+    imageFormat.image_channel_order = CL_A;
+    imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
+
+    // Set image descriptor
+    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    imageDesc.image_width = w;
+    imageDesc.image_height = h;
+    imageDesc.image_depth = 0;
+    imageDesc.image_array_size = 1;
+    imageDesc.image_row_pitch = 0;
+    imageDesc.image_slice_pitch = 0;
+    imageDesc.num_mip_levels = 0;
+    imageDesc.num_samples = 0;
+    imageDesc.buffer = NULL;
 
     // Allocate memory on GPU
-    *imageOut = clCreateBuffer(context, CL_MEM_READ_WRITE, w * h * sizeof(unsigned char), NULL, &err);
-    if (err != CL_SUCCESS) {
-        printf("Error: Failed to create buffer on device!\n");
-        return 1;
-    }
+    *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
 
     // Read the kernel code from file
     char *programSource;
@@ -250,7 +287,7 @@ int crossCheck(cl_mem image1, cl_mem image2, cl_mem *imageOut,
         return 1;
     }
 
-    err = clEnqueueNDRangeKernel(commands, kernel, 2, NULL, global, local, 0, NULL, &event);
+    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, NULL, 0, NULL, &event);
     if (err) {
         printf("Error: Failed to execute kernel! Error number = %d\n", err);
         return 1;
@@ -279,19 +316,32 @@ int occlusionFill(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
     double *time
 ) {
     int err = 0;
-    size_t global[2] = {ceil(h/8.f)*8, ceil(w/8.f)*8};          // total number of work-items in each dimension
-    size_t local[2] = {8, 8};
+    size_t global = h;                  // global domain size for our calculation
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
+    cl_image_format imageFormat;        // image format
+    cl_image_desc imageDesc;            // image descriptor
     cl_event event;                     // command queue event
     cl_ulong start, end;                // kernel execution time measurements
 
+    // Set image format
+    imageFormat.image_channel_order = CL_A;
+    imageFormat.image_channel_data_type = CL_UNSIGNED_INT8;
+
+    // Set image descriptor
+    imageDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    imageDesc.image_width = w;
+    imageDesc.image_height = h;
+    imageDesc.image_depth = 0;
+    imageDesc.image_array_size = 1;
+    imageDesc.image_row_pitch = 0;
+    imageDesc.image_slice_pitch = 0;
+    imageDesc.num_mip_levels = 0;
+    imageDesc.num_samples = 0;
+    imageDesc.buffer = NULL;
+
     // Allocate memory on GPU
-    *imageOut = clCreateBuffer(context, CL_MEM_READ_WRITE, w * h * sizeof(unsigned char), NULL, &err);
-    if (err != CL_SUCCESS) {
-        printf("Error: Failed to create buffer on device!\n");
-        return 1;
-    }
+    *imageOut = clCreateImage(context, CL_MEM_READ_WRITE, &imageFormat, &imageDesc, NULL, &err);
 
     // Read the kernel code from file
     char *programSource;
@@ -337,7 +387,7 @@ int occlusionFill(cl_mem imageIn, cl_mem *imageOut, unsigned w, unsigned h,
         return 1;
     }
 
-    err = clEnqueueNDRangeKernel(commands, kernel, 2, NULL, global, local, 0, NULL, &event);
+    err = clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, NULL, 0, NULL, &event);
     if (err) {
         printf("Error: Failed to execute kernel! Error number = %d\n", err);
         return 1;

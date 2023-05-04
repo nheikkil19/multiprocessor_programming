@@ -5,7 +5,7 @@
 #include <CL/cl.h>
 #include "utils.h"
 #include "transformations.h"
-#include "zncc.h"
+#include "disparity.h"
 
 int main(void) {
 

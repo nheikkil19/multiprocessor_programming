@@ -72,7 +72,8 @@
     "ratio": "c",
     "semaphore": "c",
     "ios": "c",
-    "processthreadsapi.h": "c"
+    "processthreadsapi.h": "c",
+    "disparity.h": "c"
   },
   "OpenCL.explorer.localizedProperties": true
 }
