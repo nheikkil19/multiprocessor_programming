@@ -15,7 +15,7 @@ __kernel void grayscaleImage(
     // Read the pixel
     int4 pixel4 = read_imagei(imageIn, (int2)(j, i));
     // Select the first 3 values
-    int3 pixel3 = (int3) pixel4.s123;
+    int3 pixel3 = (int3) pixel4.s012;
     // Define factors for conversion
     float3 factors = (float3) (0.299, 0.587, 0.114);
     // Compute the gray value
