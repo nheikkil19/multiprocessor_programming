@@ -242,7 +242,8 @@ int crossCheck(cl_mem image1, cl_mem image2, cl_mem *imageOut,
     err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &image2);
     err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), imageOut);
     err |= clSetKernelArg(kernel, 3, sizeof(unsigned), &w);
-    err |= clSetKernelArg(kernel, 4, sizeof(unsigned), &threshold);
+    err |= clSetKernelArg(kernel, 4, sizeof(unsigned), &h);
+    err |= clSetKernelArg(kernel, 5, sizeof(unsigned), &threshold);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to set kernel arguments! %d\n", err);
         return 1;
