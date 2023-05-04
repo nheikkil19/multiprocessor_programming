@@ -159,7 +159,6 @@ int grayscaleImage(cl_mem imageIn, cl_mem *imageOut,
     err = 0;
     err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &imageIn);
     err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), imageOut);
-    err |= clSetKernelArg(kernel, 2, sizeof(unsigned), &w);
     if (err != CL_SUCCESS) {
         printf("Error: Failed to set kernel arguments! %d\n", err);
         return 1;

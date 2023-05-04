@@ -2,30 +2,30 @@ __kernel void calcZNCC(
     __global unsigned char *imageInL,
     __global unsigned char *imageInR,
     __global unsigned char *imageOut,
-    unsigned w,
-    unsigned h,
-    unsigned max_disp,
-    unsigned win_size,
+    const unsigned w,
+    const unsigned h,
+    const unsigned max_disp,
+    const unsigned win_size,
     int inv
 ) {
     unsigned j = get_global_id(0);
     unsigned i = get_global_id(1);
 
+    // Stop if outside the image
     if (i >= w || j >= h)
         return;
 
     float imgAvgL, imgAvgR;
-    float zncc1, zncc2, zncc3, zncc;
-    float znccBest;
+    float zncc1, zncc2, zncc3, zncc, znccBest;
     unsigned char bestD;
     int x, y;
-    int left, right;
+    unsigned char left, right;
     unsigned countL, countR;
 
-    imgAvgL = 0;
+    imgAvgL = 0.f;
     countL = 0;
 
-    // Calculate average for left window
+    // Calculate sum for left window
     for (int win_y=0; win_y<win_size; win_y++) {
         y = j + win_y - win_size/2;
         // Do not go outside the image
@@ -41,12 +41,13 @@ __kernel void calcZNCC(
             }
         }
     }
+    // Calculate average
     imgAvgL = imgAvgL / countL;
 
     znccBest = -1;
     for (int d=0; d<=max_disp; d++) {
-        // Calculate means over window
-        imgAvgR = 0;
+        // Calculate sum for right window
+        imgAvgR = 0.f;
         countR = 0;
         for (int win_y=0; win_y<win_size; win_y++) {
             y = j + win_y - win_size/2;
@@ -62,13 +63,13 @@ __kernel void calcZNCC(
                 }
             }
         }
-        // Calculate mean
+        // Calculate average
         imgAvgR = imgAvgR / countR;
 
         // Calculate ZNCC
-        zncc1 = 0;
-        zncc2 = 0;
-        zncc3 = 0;
+        zncc1 = 0.f;
+        zncc2 = 0.f;
+        zncc3 = 0.f;
         for (int win_y=0; win_y<win_size; win_y++) {
             y = j + win_y - win_size/2;
             // Do not go outside the image
@@ -94,6 +95,6 @@ __kernel void calcZNCC(
             bestD = d;
         }
     }
-
+    // Write best value
     imageOut[j*w + i] = bestD;
 }

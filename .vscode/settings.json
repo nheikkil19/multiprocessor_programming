@@ -73,5 +73,6 @@
     "semaphore": "c",
     "ios": "c",
     "processthreadsapi.h": "c"
-  }
+  },
+  "OpenCL.explorer.localizedProperties": true
 }
