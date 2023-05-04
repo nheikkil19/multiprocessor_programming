@@ -8,10 +8,13 @@ __kernel void crossCheck(
 ) {
     int i = get_global_id(0);
     int j = get_global_id(1);
+
+    if (i >= h || j >= w)
+        return;
+
     int d;
     d = image1[i*w + j];
 
-    if (i > h || j > w) return;
 
     if ( (int)(i*w + j-d) >= 0 && abs(d - image2[i*w + j-d]) > threshold) {
         imageOut[i*w + j] = 0;

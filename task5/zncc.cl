@@ -10,6 +10,10 @@ __kernel void calcZNCC(
 ) {
     unsigned j = get_global_id(0);
     unsigned i = get_global_id(1);
+
+    if (i >= w || j >= h)
+        return;
+
     float imgAvgL, imgAvgR;
     float zncc1, zncc2, zncc3, zncc;
     float znccBest;

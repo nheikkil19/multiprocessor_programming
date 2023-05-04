@@ -8,6 +8,10 @@ __kernel void occlusionFill(
 
     int i = get_global_id(0);
     int j = get_global_id(1);
+
+    if (i >= h || j >= w)
+        return;
+
     unsigned char pixel;
     if (imageIn[i*w + j] == 0) {
         // Find the closest

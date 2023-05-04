@@ -109,7 +109,8 @@ int grayscaleImage(cl_mem imageIn, cl_mem *imageOut,
     double *time
 ) {
     int err = 0;
-    size_t global[2] = {h, w};           // total number of work-items in each dimension
+    size_t global[2] = {ceil(h/8.f)*8, ceil(w/8.f)*8};          // total number of work-items in each dimension
+    size_t local[2] = {8, 8};
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_event event;                     // command queue event
@@ -163,7 +164,7 @@ int grayscaleImage(cl_mem imageIn, cl_mem *imageOut,
         printf("Error: Failed to set kernel arguments! %d\n", err);
         return 1;
     }
-    err = clEnqueueNDRangeKernel(commands, kernel, 2, NULL, global, NULL, 0, NULL, &event);
+    err = clEnqueueNDRangeKernel(commands, kernel, 2, NULL, global, local, 0, NULL, &event);
     if (err) {
         printf("Error: Failed to execute kernel!\n");
         return 1;
