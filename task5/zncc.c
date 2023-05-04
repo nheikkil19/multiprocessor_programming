@@ -188,8 +188,8 @@ int crossCheck(cl_mem image1, cl_mem image2, cl_mem *imageOut,
     double *time
 ) {
     int err = 0;
-    size_t global[2] = {ceil(h/32.f)*32, ceil(w/32.f)*32};          // total number of work-items in each dimension
-    size_t local[2] = {32, 32};
+    size_t global[2] = {ceil(h/8.f)*8, ceil(w/8.f)*8};          // total number of work-items in each dimension
+    size_t local[2] = {8, 8};
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_event event;                     // command queue event
