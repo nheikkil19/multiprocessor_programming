@@ -6,8 +6,8 @@ int calcZNCC(cl_mem imageL, cl_mem imageR, cl_mem *imageOut,
     double *time
 ) {
     int err = 0;
-    size_t global[2] = {ceil(h/8.f)*8, ceil(w/8.f)*8};          // total number of work-items in each dimension
-    size_t local[2] = {8, 8};
+    size_t global[2] = {ceil(h/4.f)*4, ceil(w/8.f)*8};          // total number of work-items in each dimension
+    size_t local[2] = {4, 8};
     cl_program program;                 // compute program
     cl_kernel kernel;                   // compute kernel
     cl_event event;                     // command queue event
