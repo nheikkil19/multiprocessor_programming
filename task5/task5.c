@@ -244,8 +244,8 @@ int main(void) {
     printf("\nTotal time: %f s\n", timeElapsed);
 
     // Print device info
-    // printf("\n");
-    // printDeviceInfo(device_id);
+    printf("\n");
+    printDeviceInfo(device_id);
 
     return 0;
 }
