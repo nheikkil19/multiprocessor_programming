@@ -217,7 +217,7 @@ int main(void) {
     unsigned const THRESHOLD = 8;
     char file1[] = "..\\dataset\\im0.png";
     char file2[] = "..\\dataset\\im1.png";
-    char file3[] = "..\\dataset\\depthmap.png";
+    char file3[] = "depthmap.png";
     unsigned char *image1, *image2, *imageDs1, *imageDs2, *imageGray1, *imageGray2, *imageZNCC1, *imageZNCC2, *imageCross, *imageOcc, *imageOut;
     unsigned w, h, scaleFactor;
     clock_t start, end;

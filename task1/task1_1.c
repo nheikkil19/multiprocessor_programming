@@ -11,7 +11,7 @@ int main(void) {
     unsigned w, h;
     unsigned err;
     char filenameIn[] = "..\\dataset\\im0.png";
-    char filenameOut[] = "..\\dataset\\im0_gray.png";
+    char filenameOut[] = "im0_gray1.png";
 
 
     err = lodepng_decode32_file(&image, &w, &h, filenameIn);

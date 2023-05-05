@@ -17,7 +17,7 @@ int main(void) {
     unsigned w, h, p = 4;
     unsigned err;
     char filenameIn[] = "..\\dataset\\im0.png";
-    char filenameOut[] = "..\\dataset\\im0_gray.png";
+    char filenameOut[] = "im0_gray2.png";
 
     cl_uint num_platforms;
     cl_uint num_devices;
